@@ -135,7 +135,7 @@
       { id: 'attic', label: 'Attic / vents' },
       { id: 'interior', label: 'Interior harbourage' }
     ];
-    const PIPE = ['New lead','Qualified','Inspect booked','Proposal sent','Won'];
+    const PIPE = ['New lead','Qualified','Inspect booked','Proposal sent','Won','Lost'];
     const TERRITORIES = [
       { id:'NW', name:'Calgary NW', focus:'Detacheds + condos, rodent winter' },
       { id:'NE', name:'Calgary NE', focus:'Industrial bays, warehouse IPM' },
@@ -377,7 +377,10 @@
     }
     async function pushBoard(){
       if(!shopSession) return;
-      await fetch('/api/board', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ state }) });
+      const res = await fetch('/api/board', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ state, rev: state.rev||0 }) });
+      if(res.status===409){ showToast('The other phone saved first. Reload before you write again.'); return; }
+      const data = await res.json().catch(()=>({}));
+      if(data.rev) state.rev = data.rev;
     }
     function showLogin(msg){
       document.getElementById('app').innerHTML = `
@@ -427,7 +430,18 @@
     function priceFor(job){
       const svc = SERVICES.find(s=>s.id===job.svc);
       if(!svc) return null;
-      return svc;
+      let price = Number(svc.price)||0;
+      if(svc.lo && price < svc.lo) price = svc.lo;
+      if(svc.hi && price > svc.hi) price = svc.hi;
+      if(svc.skill==='spray' && price < 189) price = 189;
+      return Object.assign({}, svc, { price });
+    }
+    function cents(n){ return Math.round(Number(n||0)*100); }
+    function fromCents(c){ return Math.round(Number(c||0))/100; }
+    function logAct(lead, what){
+      if(!lead) return;
+      lead.activity = lead.activity || [];
+      lead.activity.unshift({ at: new Date().toISOString(), what });
     }
     function digits(p){ return String(p||'').replace(/\D/g,''); }
     function isCommercial(type){ return /commercial|warehouse|industrial/i.test(type||''); }
@@ -456,6 +470,10 @@
         contract: '', approval: commercial ? 'Pending' : 'Not required'
       };
     }
+    function sameBuilding(street, community, ls, lc){
+      if(street && ls) return street===ls && (!community || !lc || community===lc);
+      return false;
+    }
     function findDup(q){
       const phone = digits(q.phone);
       const email = String(q.email||'').trim().toLowerCase();
@@ -466,9 +484,11 @@
         const le = String(l.email || (l.payer&&l.payer.email) || '').trim().toLowerCase();
         const ls = String((l.site&&l.site.street) || l.street || '').trim().toLowerCase();
         const lc = String(l.community || (l.site&&l.site.community) || '').trim().toLowerCase();
-        if(phone && lp && phone.slice(-10)===lp.slice(-10)) return true;
-        if(email && le && email===le) return true;
-        if(street && ls && street===ls && community && lc && community===lc) return true;
+        if(street && ls && sameBuilding(street, community, ls, lc)) return true;
+        if((phone && lp && phone.slice(-10)===lp.slice(-10)) || (email && le && email===le)){
+          if(street && ls && !sameBuilding(street, community, ls, lc)) return false;
+          return true;
+        }
         return false;
       });
     }
@@ -484,7 +504,14 @@
         if(!l.payer) l.payer = { name:l.name||'', phone:l.phone||'', email:l.email||'', org:l.org||'' };
         if(!l.site) l.site = { street:l.street||'', community:l.community||'', unit:'', access:'see dispatch' };
         if(l.approval===undefined) l.approval = isCommercial(l.type) ? 'Pending' : 'Not required';
+        if(l.consent===undefined) l.consent = 'Unknown';
+        if(!l.history) l.history = [];
+        if(!l.activity) l.activity = [];
+        if(!l.tasks) l.tasks = [];
         if(/code\s*\d+|gate\s*\d+/i.test(l.notes||'')) l.notes = l.notes.replace(/code\s*\d+|gate\s*\d+/ig,'see dispatch');
+      });
+      (s.inspections||[]).forEach(i=>{
+        (i.defects||[]).forEach(d=>{ if(!d.id) d.id = 'DF-' + Math.floor(1000+Math.random()*9000); });
       });
       (s.jobs||[]).forEach(j=>{
         if(/code\s*\d+|gate\s*\d+/i.test(j.notes||'')) j.notes = j.notes.replace(/code\s*\d+|gate\s*\d+/ig,'see dispatch');
@@ -643,7 +670,7 @@
       const missPct = calls.length? Math.round(missed/calls.length*100)+'%' : '—';
       const touched = state.leads.filter(l=>l.created && l.firstTouch);
       const avgMin = touched.length? Math.round(touched.reduce((a,l)=>a+((new Date(l.firstTouch)-new Date(l.created))/60000),0)/touched.length) : 0;
-      const slaBreach = state.leads.filter(l=>!l.firstTouch && l.stage==='New lead').length;
+      const slaBreach = state.leads.filter(l=>!l.firstTouch && l.stage==='New lead' && l.created && ((Date.now()-new Date(l.created))/60000)>15).length;
       const asked = (state.reviews||[]).length;
       const atRisk = (state.agreements||[]).filter(a=>a.status==='Active' && (!leadBy(a.leadId)||!leadBy(a.leadId).pay)).length
         + (state.agreements||[]).filter(a=>a.status==='Held').length;
@@ -888,6 +915,12 @@
               SLA: ${l.firstTouch?'touched':'OPEN — tap First touch'}
             </div>
             <button onclick="touchLead('${l.id}')" class="w-full border border-forest/20 rounded-full py-2 text-sm">Log first touch</button>
+            <button onclick="addTask('${l.id}')" class="w-full border border-forest/20 rounded-full py-2 text-sm">Add dated task</button>
+            <label class="text-sm block">Marketing consent
+              <select onchange="setConsent('${l.id}', this.value)" class="mt-1 w-full rounded-xl px-3 py-2 bg-white border border-forest/15">
+                ${['Unknown','Yes','No'].map(v=>`<option ${l.consent===v?'selected':''}>${v}</option>`).join('')}
+              </select>
+            </label>
             <button onclick="setPay('${l.id}')" class="w-full border border-forest/20 rounded-full py-2 text-sm">Pay method on file</button>
             <label class="text-sm block">Move stage
               <select onchange="moveStage('${l.id}', this.value)" class="mt-1 w-full rounded-xl px-3 py-2 bg-white border border-forest/15">
@@ -900,14 +933,36 @@
       `);
     }
     window.moveStage = (id, stage)=>{
-      const l = state.leads.find(x=>x.id===id); l.stage=stage;
-      if(!l.firstTouch) l.firstTouch = new Date().toISOString();
+      const l = state.leads.find(x=>x.id===id); if(!l) return;
+      const from = l.stage;
+      l.history = l.history || [];
+      l.history.push({ at: new Date().toISOString(), from, to: stage });
+      l.stage = stage;
+      if(stage==='Lost' && !l.loss) l.loss = prompt('Why was this lost?','Price') || 'Not given';
+      logAct(l, 'Stage '+from+' → '+stage+(l.loss&&stage==='Lost'?' · '+l.loss:''));
       save(state); showToast('Stage → '+stage);
+    };
+    window.addTask = (id)=>{
+      const l = leadBy(id); if(!l) return;
+      const what = prompt('Next action','Call to book the inspect'); if(!what) return;
+      const due = prompt('Due YYYY-MM-DD', selectedDay)||selectedDay;
+      l.tasks = l.tasks || [];
+      l.tasks.unshift({ id:uid('TK'), what, due, owner:'Shop', status:'Open' });
+      l.next = what;
+      logAct(l, 'Task · '+what+' · due '+due);
+      save(state); render();
+    };
+    window.setConsent = (id, val)=>{
+      const l = leadBy(id); if(!l) return;
+      l.consent = val;
+      logAct(l, 'Consent '+val);
+      save(state); render();
     };
     window.touchLead = (id)=>{
       const l = leadBy(id); if(!l) return;
       if(!l.firstTouch) l.firstTouch = new Date().toISOString();
       l.lastTouch = new Date().toISOString();
+      logAct(l, 'First touch');
       save(state); showToast('First touch stamped on '+l.id);
     };
     window.setPay = (id)=>{
@@ -973,7 +1028,7 @@
                 <div class="border-b border-forest/10 py-2 text-sm">
                   <div class="flex justify-between"><span class="font-semibold">${d.zone}</span><span class="${d.severity==='High'?'text-safety':'text-forest/50'}">${d.severity}</span></div>
                   <div>${d.note}</div>
-                  <div class="grid grid-cols-2 gap-2 mt-2 no-print">${photoFrame(i.id,'d'+idx,'Before')}${photoFrame(i.id,'d'+idx,'After')}</div>
+                  <div class="grid grid-cols-2 gap-2 mt-2 no-print">${photoFrame(i.id,d.id||('d'+idx),'Before')}${photoFrame(i.id,d.id||('d'+idx),'After')}</div>
                   <button class="text-xs text-forest/50 no-print" onclick="delDefect('${i.id}',${idx})">Remove</button>
                 </div>`).join('')||'<p class="text-sm text-forest/50">Map is empty.</p>'}
             </div>
@@ -1018,7 +1073,7 @@
       if(!note) return;
       const severity = prompt('Severity: High / Medium / Low','High')||'Medium';
       const i = state.inspections.find(x=>x.id===id);
-      i.defects.push({ zone, severity, note }); save(state); render();
+      i.defects.push({ id:uid('DF'), zone, severity, note }); save(state); render();
     };
     window.delDefect = (id, idx)=>{
       const i = state.inspections.find(x=>x.id===id); i.defects.splice(idx,1); save(state); render();
@@ -1188,8 +1243,8 @@
               <strong class="font-display">${d.zone} · ${d.severity}</strong>
               <p class="text-sm mt-1">${esc(d.note)}</p>
               <div class="grid grid-cols-2 gap-3 mt-3">
-                ${photoFrame(i.id,'d'+idx,'Before')}
-                ${photoFrame(i.id,'d'+idx,'After')}
+                ${photoFrame(i.id,d.id||('d'+idx),'Before')}
+                ${photoFrame(i.id,d.id||('d'+idx),'After')}
               </div>
             </li>`).join('')}</ol>
           <h2 class="font-display text-2xl mt-10 mb-3">Pathology notes</h2>
@@ -1235,12 +1290,12 @@
         if(open) open.end = new Date().toTimeString().slice(0,5);
         const svc = priceFor(j);
         if(!svc){ showToast('No price-book SKU on this work order. Invoice not guessed.'); save(state); render(); return; }
-        const sub = svc.price;
-        const gst = Math.round(sub*GST*100)/100;
-        state.invoices.unshift({ id:uid('INV'), leadId:j.leadId, jobId:id, date:j.date, due:addDaysISO(j.date,14), subtotal:sub, gst, total:sub+gst, status:'Draft', issued:false, method:'', sku:svc.id, plan:null });
+        const subCents = cents(svc.price);
+        const gstCents = Math.round(subCents*GST);
+        state.invoices.unshift({ id:uid('INV'), leadId:j.leadId, jobId:id, date:j.date, due:addDaysISO(j.date,14), subtotalCents:subCents, gstCents, totalCents:subCents+gstCents, subtotal:fromCents(subCents), gst:fromCents(gstCents), total:fromCents(subCents+gstCents), status:'Draft', issued:false, method:'', sku:svc.id, plan:null });
         state.reviews.unshift({ id:uid('RV'), leadId:j.leadId, asked:j.date, status:'Ready', note:'Ask after '+id });
-        sendTemplate(j.leadId, 'done');
-        save(state); showToast('Invoice from price book · review primed');
+        logAct(leadBy(j.leadId), 'Job complete · invoice drafted from '+svc.id);
+        save(state); showToast('Invoice from '+svc.id+'. Message stays in the outbox until you send it.');
         return;
       }
       save(state); render();
@@ -1309,7 +1364,10 @@
     };
     window.sendTemplate = async (leadId, tid)=>{
       const l = leadBy(leadId); const t = COMM_TEMPLATES.find(x=>x.id===tid);
-      const job = (state.jobs||[]).find(j=>j.leadId===leadId) || {};
+      const job = (state.jobs||[]).find(j=>j.leadId===leadId && j.date===selectedDay) || (state.jobs||[]).find(j=>j.leadId===leadId) || {};
+      const inv = (state.invoices||[]).find(x=>x.leadId===leadId && x.status!=='Paid') || {};
+      const marketing = /quote|review|drip/i.test(tid);
+      if(marketing && l && l.consent!=='Yes'){ showToast('No consent on file. Marketing note not opened.'); return; }
       let body = t.body
         .replace('{name}', l?.name||'')
         .replace('{org}', l?.org||'')
@@ -1317,10 +1375,12 @@
         .replace('{window}', job.window||'')
         .replace('{site}', job.address||l?.community||'')
         .replace('{tech}', (techBy(job.tech)||{}).name||'Framework')
-        .replace('{id}','INV')
-        .replace('{total}', money(l?.value||0));
+        .replace('{id}', inv.id||'')
+        .replace('{total}', money(inv.total||0));
+      if(marketing && !/STOP/i.test(body)) body += ' Reply STOP to opt out. Framework Pest Ltd. 825 747 5787.';
       const to = t.channel==='Email' ? (l?.email||'') : (l?.phone||'');
-      const row = { id:uid('C'), leadId, channel:t.channel, template:tid, date:selectedDay, status:'Handed to phone', preview:body.slice(0,140), to };
+      const row = { id:uid('C'), leadId, channel:t.channel, template:tid, date:selectedDay, status:'Opened', preview:body.slice(0,140), to };
+      logAct(l, t.channel+' opened · '+tid);
       state.comms.unshift(row);
       save(state);
       let href = t.channel==='Email'
@@ -1330,8 +1390,8 @@
         const res = await fetch('/api/send', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ channel:t.channel, to, body, subject:t.name, leadId }) });
         if(res.ok){ const data = await res.json(); if(data.href) href = data.href; }
       } catch(e) {}
-      showToast(t.channel+' opened on this phone. Tap send.');
-      location.href = href;
+      showToast(t.channel+' opened. It is not sent until you tap send.');
+      if(href) location.href = href;
     };
     window.requestPay = (id)=>{
       const inv = state.invoices.find(x=>x.id===id); if(!inv) return;
@@ -1352,8 +1412,10 @@
       const pest = prompt('Target pest','')||'';
       const weather = prompt('Weather','')||'';
       const cat = CHEMS.find(c=>c.id===product) || { name:product, pcp:'Confirm on container', note:'' };
-      state.usages.unshift({ id:uid('U'), jobId, date:selectedDay, product, qty, area, pest, weather, tech:jobBy(jobId)?.tech||'T1', pcp:cat.pcp, note:cat.note });
-      save(state); view='chem'; showToast('Use logged. Label still governs.');
+      const method = prompt('Method (crack-and-crevice / bait / exclude)','Exclude')||'';
+      const cert = prompt('Applicator certificate number on this visit','')||'';
+      state.usages.unshift({ id:uid('U'), jobId, date:selectedDay, product, qty, amount:qty, area, pest, weather, tech:jobBy(jobId)?.tech||'T1', pcp:cat.pcp, method, cert, note:cat.note });
+      save(state); view='chem'; showToast('Use logged. This is not the Alberta legal record until the shop confirms the fields.');
     };
     window.checkDevice = (id)=>{
       const d = state.devices.find(x=>x.id===id); if(!d) return;
@@ -2424,7 +2486,10 @@
           { step:'Review ask (if no callback)', due:addDays(3), template:'review', seq:'review' }
         ]
       };
+      const lead = leadBy(leadId);
       (pack[seq]||[]).forEach(s=>{
+        const marketing = /quote|review/.test(s.template);
+        if(marketing && (!lead || lead.consent!=='Yes')) return;
         state.drips.unshift({ id:uid('DR'), leadId, seq:s.seq, step:s.step, due:s.due, status:'Due', template:s.template });
       });
     }
