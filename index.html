@@ -1,0 +1,2610 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Framework OS — Pest Guard + Sales Hub</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Framework" />
+  <meta name="theme-color" content="#15361E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: '#15361E',
+            sage: '#A9C0A0',
+            safety: '#F2733A',
+            offwhite: '#F4F2EC',
+            obsidian: '#070707'
+          },
+          fontFamily: {
+            display: ['Outfit', 'sans-serif'],
+            body: ['Quicksand', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root { --forest:#15361E; --sage:#A9C0A0; --safety:#F2733A; --off:#F4F2EC; --ink:#070707; }
+    html, body { background: #F4F2EC; color: #15361E; font-family: Quicksand, sans-serif; }
+    h1,h2,h3,h4,.font-display { font-family: Outfit, sans-serif; }
+    .arc:before { content:""; position:absolute; width:180px; height:180px; border:1px solid #A9C0A0; border-radius:0 180px 0 0; top:-36px; right:-36px; pointer-events:none; opacity:.45; }
+    .kanban { min-height: 420px; }
+    .zone-hot { outline: 1px solid #A9C0A0; }
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { background: white; }
+      main { margin: 0; padding: 0; }
+    }
+    .print-only { display: none; }
+    .chip { letter-spacing: .04em; }
+    .bay { border: 1px solid rgba(21,54,30,.12); border-radius: 1rem; padding: .65rem .7rem .5rem; margin-bottom: .45rem; background: #fff; }
+    .bay.on { border-color: #15361E; background: #fff; }
+    .navchip { font-family: Outfit, sans-serif; font-size: 11px; padding: .3rem .5rem; border-radius: 999px; border: 1px solid rgba(21,54,30,.16); color: #15361E; background: #F4F2EC; }
+    .navchip.on { background: #15361E; border-color: #15361E; color: #F4F2EC; }
+    .photo-slot { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.25rem; min-height:7.5rem; border:1px dashed #A9C0A0; border-radius:1rem; background:#F4F2EC; color:#15361E; text-align:center; padding:.6rem; cursor:pointer; }
+    .photo-slot.filled { border-style:solid; padding:0; background:#070707; overflow:hidden; cursor:default; }
+    .photo-slot.filled img { width:100%; height:8.5rem; object-fit:cover; display:block; }
+    .photo-slot.filled figcaption { font-size:10px; color:#F4F2EC; padding:.35rem .5rem .5rem; background:#15361E; width:100%; }
+    .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+    @media print {
+      .photo-slot.empty { min-height:6.5rem; border:1px dashed #15361E; }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="app" class="min-h-screen">
+    <div style="min-height:100vh;background:#15361E;color:#F4F2EC;padding:28px;font-family:Outfit,sans-serif">
+      <div style="color:#F2733A;letter-spacing:.2em;font-size:11px;text-transform:uppercase">Framework Pest Ltd.</div>
+      <h1 style="font-size:32px;margin:8px 0 12px">Framework OS</h1>
+      <p style="color:#A9C0A0;max-width:28rem">Command board is in this file — Framework-OS.html — not the public landing page. If this message stays, JavaScript did not run (preview or file open blocked scripts).</p>
+    </div>
+  </div>
+  <script>
+    const KEY = 'framework-os-v6';
+    const GST = 0.05;
+    const SOP = [
+      { id:'site', title:'01  Site and grade', why:'Water at the foundation is a pest factory. Walk the lot before you touch a wall.', items:[
+        { id:'s1', q:'Does finished grade fall away from the foundation on all sides?' },
+        { id:'s2', q:'Are downspouts extended so roof water does not dump against the wall?' },
+        { id:'s3', q:'Is wood, mulch, or stored material held off soil-to-siding contact?' },
+        { id:'s4', q:'Are window wells drained and screened, not holding leaf litter?' },
+        { id:'s5', q:'Any tree limbs abrading roof, gutters, or soffit?' }
+      ]},
+      { id:'roof', title:'02  Roof, flashing, and drainage', why:'Weakest points are changes in plane or material — stacks, valleys, chimneys, wall intersections.', items:[
+        { id:'r1', q:'Roof covering viewed (ground, binoculars, or hatch). Condition noted?' },
+        { id:'r2', q:'Flashings at chimney, plumbing stacks, vents, and roof-to-wall sound?' },
+        { id:'r3', q:'Gutters aligned, clean, and discharging away from the building?' },
+        { id:'r4', q:'Soffit and fascia intact, vents open and screened — not blocked or chewed?' },
+        { id:'r5', q:'Signs of ice-damming risk (thin attic insulation, stained eaves) recorded?' }
+      ]},
+      { id:'cladding', title:'03  Walls, weeps, openings', why:'Cladding joints and weeps are designed to drain. Guard them. Do not mortar them shut.', items:[
+        { id:'c1', q:'Weep holes present and fitted with pest-rated guards where required?' },
+        { id:'c2', q:'Utility penetrations (gas, AC, hose bib, cable) collared and sealed?' },
+        { id:'c3', q:'Door sweeps and weatherseals close the gap at grade and garage?' },
+        { id:'c4', q:'Window and door frames free of rot, gaps, and ant/frass staining?' },
+        { id:'c5', q:'Dryer, bath, and kitchen exhausts terminate outdoors with intact screens?' }
+      ]},
+      { id:'structure', title:'04  Structure and wood integrity', why:'Probe suspect wood. Moisture plus soil contact is the carpenter-ant and rot brief in Alberta — not termites.', items:[
+        { id:'t1', q:'Foundation cracks mapped. Width, location, and whether they take a mouse?' },
+        { id:'t2', q:'Sill, rim joist, and any wood-soil contact probed for softness or galleries?' },
+        { id:'t3', q:'Carpenter-ant frass, winged ants, or hollow-sounding damp wood noted?' },
+        { id:'t4', q:'Termite language avoided unless a qualified ID is documented. AB default: not established.' },
+        { id:'t5', q:'Active movement vs historic settlement distinguished?' }
+      ]},
+      { id:'below', title:'05  Basement and crawl', why:'Start below grade after the lot walk. Follow exterior clues inside.', items:[
+        { id:'b1', q:'Access gained to every crawl or unheated void that can be entered safely?' },
+        { id:'b2', q:'Moisture clues: efflorescence, rusty form ties, staining, stored goods on floor?' },
+        { id:'b3', q:'Rim-joist insulation, gaps at joist bays, and pipe sleeves inspected?' },
+        { id:'b4', q:'Sump, floor drain, and any wood posts or stair stringers at slab checked?' },
+        { id:'b5', q:'If unheated crawl: ground cover and ventilation present? If heated: walls insulated, vents managed?' }
+      ]},
+      { id:'attic', title:'06  Attic, insulation, vents', why:'Attic moisture is leak, condensation, or ice dam. Pest use follows the same holes heat and water use.', items:[
+        { id:'a1', q:'Every attic hatch found and opened. More than one attic checked?' },
+        { id:'a2', q:'Ventilation path clear at soffit and ridge or gable? Daylight at vents?' },
+        { id:'a3', q:'Kitchen and bath fans ducted through the roof or wall — not dumping in the attic?' },
+        { id:'a4', q:'Droppings, nesting, chewed baffles, or unscreened vents recorded?' },
+        { id:'a5', q:'Insulation damp, missing at eaves, or covering recessed fixtures?' }
+      ]},
+      { id:'interior', title:'07  Interior harbourage', why:'Finish last. Interiors confirm the envelope story; they do not replace it.', items:[
+        { id:'i1', q:'Activity mapped to rooms: droppings, trails, bites, casings, live pests?' },
+        { id:'i2', q:'Kitchens and food storage: sanitation vs structural entry separated?' },
+        { id:'i3', q:'Plumbing leaks or condensation that create attractants noted?' },
+        { id:'i4', q:'Multi-unit or commercial food site flagged for series work, not one visit?' },
+        { id:'i5', q:'Client duties listed: prep, storage, pets, access?' }
+      ]}
+    ];
+    const ZONES = [
+      { id: 'roof', label: 'Roof / transitions' },
+      { id: 'soffit', label: 'Soffit / fascia' },
+      { id: 'weep', label: 'Weep holes / cladding' },
+      { id: 'window', label: 'Windows / doors' },
+      { id: 'utility', label: 'Utility penetrations' },
+      { id: 'foundation', label: 'Foundation / grade' },
+      { id: 'garage', label: 'Garage / overhead' },
+      { id: 'crawl', label: 'Crawl / rim joist' },
+      { id: 'attic', label: 'Attic / vents' },
+      { id: 'interior', label: 'Interior harbourage' }
+    ];
+    const PIPE = ['New lead','Qualified','Inspect booked','Proposal sent','Won'];
+    const TERRITORIES = [
+      { id:'NW', name:'Calgary NW', focus:'Detacheds + condos, rodent winter' },
+      { id:'NE', name:'Calgary NE', focus:'Industrial bays, warehouse IPM' },
+      { id:'SW', name:'Calgary SW', focus:'Heritage envelopes, weep holes' },
+      { id:'SE', name:'Calgary SE', focus:'New-build gaps, ants + mice' },
+      { id:'CORE', name:'Beltline / Inner City', focus:'Multi-unit, bed bug protocol' },
+      { id:'AIR', name:'Airdrie', focus:'Perimeter + wasp season' },
+      { id:'COC', name:'Cochrane', focus:'Acreage outbuildings' },
+      { id:'CHE', name:'Chestermere', focus:'Lakeside soffits + wasps' },
+      { id:'OKO', name:'Okotoks', focus:'Foundation freeze-thaw' },
+      { id:'RVC', name:'Rocky View', focus:'Rural exclusion, grain sheds' }
+    ];
+    const TECHS = [
+      { id:'T1', name:'A. Mensah', role:'Lead tech', skills:'Exclusion · rodent · envelope', tags:['exclusion','rodent','inspect','residential'] },
+      { id:'T2', name:'Deolu Akin', role:'Founder', skills:'Inspect · commercial · quotes', tags:['inspect','commercial','quotes','exclusion'] },
+      { id:'T3', name:'K. Patel', role:'Series tech', skills:'Bed bug · food site · IPM', tags:['bedbug','food','ipm','series'] }
+    ];
+    const RATE_SECTIONS = [
+      { id:'inspect', title:'Inspection', blurb:'Credit 100% to first treatment if they book within 7 days. Not a home inspection and not an engineering stamp.', items:[
+        { id:'SVC-INSP', name:'Residential inspection', minutes:75, lo:129, price:159, hi:189, skill:'inspect', window:'Year-round', note:'SOP walk + moisture notes. Filters LSA tyre-kickers.' },
+        { id:'SVC-INSP-AH', name:'Same-day / after-hours inspect adder', minutes:30, lo:75, price:100, hi:125, skill:'inspect', window:'Urgent', note:'Doorway wasps, kitchen mice, bed bugs.' },
+        { id:'SVC-COM', name:'Commercial / multi-res survey', minutes:120, lo:189, price:269, hi:349, skill:'commercial', window:'Year-round', note:'Credit to year-1 if they sign within 14 days.' }
+      ]},
+      { id:'spray', title:'Spray menu — billed production', blurb:'Minimum spray ticket $189 before GST. IPM decides whether and where. The card decides what the lap costs. Do not give away a foundation spray on a mouse stop.', items:[
+        { id:'SVC-PERIM', name:'Foundation / perimeter residual', minutes:60, lo:219, price:269, hi:329, skill:'spray', window:'May–Sep', note:'One full lap: grade beam, weeps, doors, garage return, patio edge.' },
+        { id:'SVC-EAVE', name:'Perimeter + eave / soffit band', minutes:90, lo:279, price:339, hi:399, skill:'spray', window:'May–Sep', note:'Default first “general pest” visit when they want crawlers gone.' },
+        { id:'SVC-STOREY', name:'Two-storey / walk-out / hedge adder', minutes:30, lo:60, price:100, hi:140, skill:'spray', window:'Any spray', note:'Add to that visit. Not a stand-alone job.' },
+        { id:'SVC-WASP', name:'Wasp nest application (accessible)', minutes:45, lo:189, price:219, hi:249, skill:'spray', window:'Jun–Sep', note:'First nest. +$40–$75 each extra same visit.' },
+        { id:'SVC-WASP-V', name:'Void / soffit / ground nest', minutes:90, lo:279, price:359, hi:449, skill:'spray', window:'Jun–Sep', note:'Hidden or elevated. May need a dusk return.' },
+        { id:'SVC-MOSQ', name:'Mosquito / biting-fly barrier', minutes:50, lo:169, price:219, hi:279, skill:'spray', window:'Jun–Aug', note:'Priced by lot. Small $129–$199 · large/ravine $249–$399. Check Code near water.' },
+        { id:'SVC-CLUSTER', name:'Cluster / boxelder / lady beetle wall', minutes:70, lo:219, price:279, hi:349, skill:'spray', window:'Aug–Oct', note:'Sunny elevation + attic soffit edge.' },
+        { id:'SVC-CC', name:'Interior crack-and-crevice', minutes:60, lo:229, price:279, hi:329, skill:'spray', window:'Year-round', note:'Stand-alone interior. As add-on to exterior: $189–$279.' },
+        { id:'SVC-VOID', name:'Garage / attic / void dust or residual', minutes:40, lo:149, price:199, hi:249, skill:'spray', window:'Year-round', note:'Where the label allows. Separate from living-space spray.' }
+      ]},
+      { id:'initial', title:'One-time / first lift', blurb:'Initial is 1.5–2.5× a maintenance stop. Do not discount mobilization to win the job.', items:[
+        { id:'SVC-MOUSE', name:'Mouse / rodent mobilization', minutes:120, lo:349, price:449, hi:549, skill:'rodent', window:'Sep–Mar', note:'Inspect, devices, exclusion list, 14–21 day follow-up. Spray does not close 6 mm gaps.' },
+        { id:'SVC-COMBO', name:'Mouse setup + spring perimeter', minutes:150, lo:499, price:624, hi:749, skill:'rodent', window:'Apr–Jun', note:'Two trades, one mobilization. Price both. Do not throw the spray in.' },
+        { id:'SVC-ANT', name:'Carpenter ant investigate + first treatment', minutes:90, lo:299, price:399, hi:499, skill:'residential', window:'Apr–Sep', note:'Find moisture / wood. Forager spray alone is not the job. Repair not included.' },
+        { id:'SVC-EXCL', name:'Physical exclusion package (res)', minutes:180, lo:980, price:1840, hi:2400, skill:'exclusion', window:'Year-round', note:'Seals, weeps, garage. Materials beyond kit extra. T&M if the list grows.' },
+        { id:'SVC-BB0', name:'Bed bug inspect + written plan', minutes:75, lo:179, price:239, hi:299, skill:'bedbug', window:'Year-round', note:'Series quoted after inspect. Never one spray of the couch.' },
+        { id:'SVC-BB1', name:'Bed bug series — visit 1', minutes:180, lo:700, price:700, hi:0, skill:'bedbug', window:'Year-round', note:'Placeholder until unit count and prep are known.' },
+        { id:'SVC-FOOD', name:'Food-site night inspect', minutes:120, lo:640, price:640, hi:0, skill:'food', window:'Year-round', note:'Applicator cert if a pesticide is used. After-close labour.' },
+        { id:'SVC-NS', name:'No-show / wasted stop', minutes:30, lo:95, price:95, hi:0, skill:'residential', window:'Year-round', note:'Access failed without notice.' }
+      ]},
+      { id:'program', title:'Programs — spray season + winter rodent', blurb:'Do not sell mice-only then spray the foundation free in May. Prepaid year beats monthly by 8–10%, not by giving away a lap.', items:[
+        { id:'PRG-A', name:'A — Spray season (2 laps)', minutes:120, lo:429, price:529, hi:629, skill:'spray', window:'May–Sep', note:'Spring + peak summer residual. Wasp nests extra unless a credit is sold.' },
+        { id:'PRG-A+', name:'A+ — Spray season + eave', minutes:180, lo:529, price:639, hi:749, skill:'spray', window:'May–Sep', note:'Two heavier spray visits.' },
+        { id:'PRG-M', name:'M — Mosquito barrier season', minutes:150, lo:349, price:449, hi:549, skill:'spray', window:'Jun–Aug', note:'3 lot-size barrier applications. Large/wet lots quoted up.' },
+        { id:'PRG-B', name:'B — Mouse winter watch', minutes:135, lo:429, price:539, hi:649, skill:'rodent', window:'Oct–Mar', note:'Fall proofing + devices + 2–3 winter services. No spray substitute.' },
+        { id:'PRG-C', name:'C — Framework Year', minutes:0, lo:1049, price:1299, hi:1549, skill:'program', window:'12 months', note:'A or A+ plus B plus 1–2 wasp credits + optional M. Or $99–$149/mo.' },
+        { id:'PRG-WASP', name:'Wasp credit after program', minutes:30, lo:99, price:124, hi:149, skill:'spray', window:'Jun–Sep', note:'Accessible nest beyond included credits.' }
+      ]},
+      { id:'commercial', title:'Commercial shape', blurb:'No pest-free promise on food sites. Promise a documented program and a re-service window if sanitation and access hold.', items:[
+        { id:'SVC-QMON', name:'Warehouse / shop quarterly', minutes:75, lo:249, price:349, hi:449, skill:'commercial', window:'Quarterly', note:'Includes labelled zone work, not a fog.' },
+        { id:'SVC-KIT', name:'Kitchen / restaurant monthly IPM', minutes:90, lo:189, price:269, hi:349, skill:'food', window:'Monthly', note:'After clean-out. Extra flush $149–$249. After-close +25–40%.' }
+      ]}
+    ];
+    const SERVICES = RATE_SECTIONS.flatMap(s=>s.items);
+    const JOB_STAT = ['Scheduled','En route','On site','Complete','No-show','Cancelled'];
+    const CHEMS = [
+      { id:'EX-MESH', name:'Copper mesh / hardware cloth', kind:'Exclusion', pcp:'n/a — hardware', note:'Physical. Not a pesticide.' },
+      { id:'EX-SEAL', name:'Exterior-grade sealant', kind:'Exclusion', pcp:'n/a — hardware', note:'Physical. Not a pesticide.' },
+      { id:'EX-WEEP', name:'Pest-rated weep guards', kind:'Exclusion', pcp:'n/a — hardware', note:'Do not mortar weeps shut.' },
+      { id:'MON-SNAP', name:'Covered snap trap', kind:'Device', pcp:'n/a — device', note:'Place after seals close.' },
+      { id:'MON-STAT', name:'Tamper-resistant station', kind:'Device', pcp:'n/a — device', note:'Bait only if label later requires.' },
+      { id:'CHEM-HOLD', name:'Labelled rodenticide (if used)', kind:'Pesticide', pcp:'Confirm PCP # on the container', note:'Certified applicator. Follow the label. No rate invented here.' },
+      { id:'CHEM-CR', name:'Labelled cockroach bait (if used)', kind:'Pesticide', pcp:'Confirm PCP # on the container', note:'Food site: applicator certificate. Label governs.' },
+      { id:'CHEM-BB', name:'Labelled bed-bug product (if used)', kind:'Pesticide', pcp:'Confirm PCP # on the container', note:'Series work. Prep sheet required.' }
+    ];
+    const COMM_TEMPLATES = [
+      { id:'remind', name:'Appointment reminder', channel:'SMS', body:'Framework Pest: {name}, we are booked {date} {window} at {site}. Reply C to confirm or call the shop if access changed.' },
+      { id:'omw', name:'On my way', channel:'SMS', body:'Framework tech {tech} is en route to {site}. Window {window}. Gate/pets: use the note on file.' },
+      { id:'prep', name:'Prep sheet', channel:'Email', body:'{name} — visit {date}. Clear the listed rooms, bin pet food, and keep the cat contained. We treat the envelope first, not the pantry.' },
+      { id:'done', name:'Service complete', channel:'Email', body:'Work finished at {site}. Seals and monitors as scoped. Aftercare is attached. Questions: frameworkpest.ca' },
+      { id:'quote2', name:'Quote follow-up · day 2', channel:'Email', body:'{name} — the exclusion scope for {org} is still open. Reply with a window or questions. Framework does not lead with a spray.' },
+      { id:'quote5', name:'Quote follow-up · day 5', channel:'SMS', body:'Framework Pest: still holding the {org} inspect/exclusion quote. Want it on the board or should we close the file?' },
+      { id:'aftercare', name:'48h aftercare', channel:'Email', body:'{name} — 48 hours after {site}. Activity in stations is normal. Call the shop if you see a new gap or a live wasp nest we missed.' },
+      { id:'review', name:'Review request', channel:'Email', body:'If the visit was solid, a Google review helps Calgary neighbours find exclusion-first work. Thank you — Framework Pest.' },
+      { id:'invoice', name:'Invoice ready', channel:'Email', body:'Invoice {id} for {org} is {total} CAD including GST. Pay link is a placeholder until the shop processor is live.' },
+      { id:'noshow', name:'No-show follow-up', channel:'SMS', body:'We arrived at {site} and could not access. Reply with a new window or we will rebook the exclusion visit.' }
+    ];
+
+    const seed = () => ({
+      user: { name: 'Deolu Akin', role: 'Founder / Operator', shop: 'Framework Pest Ltd.' },
+      leads: [
+        { id:'L-1042', name:'Maya Chen', org:'Chen Residence', phone:'403-555-0142', email:'maya.chen@email.com', community:'Altadore', zone:'SW', type:'Residential detached', pest:'House mice', evidence:'Droppings in pantry, scratching in walls after 02:00', urgency:'High', stage:'Inspect booked', value:1840, next:'Inspection 12 Sep 08:30', notes:'Pets: 1 cat. Access: see dispatch.', created:'2026-09-10T07:12:00', firstTouch:'2026-09-10T07:18:00', source:'GBP', pay:'E-transfer', referredBy:'' },
+        { id:'L-1048', name:'Jordan Hale', org:'Hale + West LLP', phone:'403-555-0190', email:'j.hale@halewest.ca', community:'Downtown', zone:'CORE', type:'Commercial office', pest:'Cluster flies / envelope gaps', evidence:'Flies at south glazing, gaps at curtain-wall sills', urgency:'Medium', stage:'Proposal sent', value:6240, next:'Follow-up call 11 Sep', notes:'Building manager wants exclusion-first scope, not monthly spray.', created:'2026-09-08T09:40:00', firstTouch:'2026-09-08T10:05:00', source:'Referral', pay:'PO', referredBy:'Property manager network' },
+        { id:'L-1051', name:'Priya Nair', org:'Sunridge Food Hall', phone:'403-555-0118', email:'ops@sunridgefood.ca', community:'Sunridge', zone:'NE', type:'Commercial kitchen', pest:'German cockroach (suspect)', evidence:'Nymphs near dish pit, grease harbourage', urgency:'High', stage:'Qualified', value:4800, next:'Night inspect window', notes:'Occupied food site. Applicator certificate required if chemical used.', created:'2026-09-11T08:02:00', firstTouch:'2026-09-11T08:11:00', source:'Web', pay:'Card on file pending', referredBy:'' },
+        { id:'L-1055', name:'Owen Brooks', org:'Brooks Family', phone:'587-555-0166', email:'owen.b@email.com', community:'Evanston', zone:'NW', type:'Residential detached', pest:'Pavement ants', evidence:'Trail from garage control joint into mudroom', urgency:'Low', stage:'New lead', value:420, next:'Book spring-style perimeter + crack seal list', notes:'Wants DIY first — retail only if labelled domestic is enough; else inspect.', created:'2026-09-11T10:40:00', firstTouch:'', source:'Missed call', pay:'', referredBy:'' },
+        { id:'L-1058', name:'Leah Okonkwo', org:'Bow River Lofts', phone:'403-555-0177', email:'leah@bowlofts.ca', community:'East Village', zone:'CORE', type:'Multi-unit', pest:'Bed bugs (unit 612)', evidence:'Bites + casings at headboard', urgency:'High', stage:'Won', value:2100, next:'Prep sheet + series visit 1', notes:'Condo board access. Not a one-spray job.', created:'2026-09-09T14:20:00', firstTouch:'2026-09-09T14:27:00', source:'PM email', pay:'PO', referredBy:'' },
+        { id:'L-1060', name:'Tom Vickers', org:'Vickers Shop', phone:'403-555-0129', email:'tom@vickers.shop', community:'Okotoks', zone:'OKO', type:'Light industrial', pest:'Mice + sparrow entry', evidence:'Droppings on insulation, 20mm gap at overhead seal', urgency:'Medium', stage:'Won', contract:'Monitoring', value:3600, next:'Q4 exclusion audit', notes:'Recurring monitoring contract. Access: see dispatch.', created:'2026-06-12T09:00:00', firstTouch:'2026-06-12T09:08:00', source:'Nine-around', pay:'E-transfer', referredBy:'Neighbour on 32 Ave' }
+      ],
+      inspections: [
+        { id:'INS-887', leadId:'L-1042', site:'14 Westmount Rd SW, Altadore', date:'2026-09-10', tech:'A. Mensah', moisture:'Rim joist 19% — elevated at NW corner after Chinook melt.', thermal:'Cold bridge at unsealed hose bib sleeve. Heat loss plume at dryer vent.', defects:[
+          { zone:'foundation', severity:'High', note:'12 mm settlement crack at NW corner — mouse-capable. Needs mortar + hardware cloth + exterior grade seal.' },
+          { zone:'utility', severity:'High', note:'Unsealed AC line-set and gas pipe penetration at east wall.' },
+          { zone:'garage', severity:'Medium', note:'Weather seal on overhead door crushed at both bottom corners.' },
+          { zone:'weep', severity:'Low', note:'Open weeps at brick — install pest-rated weep guards, do not mortar shut.' }
+        ], attractants:'Bird seed stored in paper bags on garage floor. Dog food in open bin.', recommendation:'Physical exclusion package before any rodenticide. Monitoring stations only after seal list is complete.', status:'Draft report',
+          sop:{
+            s1:'Fail', s2:'Fail', s3:'Fail', s4:'Pass', s5:'Pass',
+            r1:'Pass', r2:'Watch', r3:'Fail', r4:'Watch', r5:'Watch',
+            c1:'Fail', c2:'Fail', c3:'Fail', c4:'Pass', c5:'Watch',
+            t1:'Fail', t2:'Watch', t3:'Pass', t4:'Pass', t5:'Pass',
+            b1:'Pass', b2:'Watch', b3:'Fail', b4:'Pass', b5:'n/a',
+            a1:'Pass', a2:'Watch', a3:'Pass', a4:'Pass', a5:'Watch',
+            i1:'Fail', i2:'Fail', i3:'Pass', i4:'Pass', i5:'Watch'
+          }
+        }
+      ],
+      proposals: [
+        { id:'PR-221', leadId:'L-1048', title:'Curtain-wall exclusion + quarterly monitor', package:'Commercial envelope retrofit', subtotal:6240, gst:312, total:6552, valid:'2026-09-25', status:'Sent', signed:false, approval:'Pending' }
+      ],
+      jobs: [
+        { id:'JOB-401', leadId:'L-1042', date:'2026-09-12', window:'08:30–10:00', tech:'T1', type:'Envelope inspect', status:'Scheduled', community:'Altadore', address:'14 Westmount Rd SW', zone:'SW', driveMin:14, order:1, notes:'Cat on site. Access: see dispatch.' },
+        { id:'JOB-402', leadId:'L-1058', date:'2026-09-11', window:'10:30–13:00', tech:'T3', type:'Bed bug visit 1', status:'On site', community:'East Village', address:'Bow River Lofts 612', zone:'CORE', driveMin:11, order:1, notes:'Condo board access. Series.' },
+        { id:'JOB-403', leadId:'L-1048', date:'2026-09-11', window:'13:30–15:30', tech:'T2', type:'Curtain-wall survey', status:'Scheduled', community:'Downtown', address:'Hale + West LLP', zone:'CORE', driveMin:8, order:2, notes:'Manager wants exclusion-first.' },
+        { id:'JOB-404', leadId:'L-1060', date:'2026-09-11', window:'09:00–10:30', tech:'T1', type:'Q monitor + sparrow gap', status:'En route', community:'Okotoks', address:'Vickers Shop', zone:'OKO', driveMin:32, order:1, notes:'Overhead seal 20 mm.' },
+        { id:'JOB-405', leadId:'L-1051', date:'2026-09-12', window:'21:00–23:00', tech:'T3', type:'Night kitchen inspect', status:'Scheduled', community:'Sunridge', address:'Sunridge Food Hall', zone:'NE', driveMin:18, order:2, notes:'Occupied food site.' },
+        { id:'JOB-406', leadId:'L-1055', date:'2026-09-13', window:'Anytime AM', tech:'T1', type:'Ant + joint seal consult', status:'Scheduled', community:'Evanston', address:'Brooks Family', zone:'NW', driveMin:22, order:1, notes:'Retail first if labelled domestic is enough.' }
+      ],
+      invoices: [
+        { id:'INV-118', leadId:'L-1060', jobId:'JOB-404', date:'2026-08-12', due:'2026-08-26', subtotal:890, gst:44.50, total:934.50, status:'Paid', method:'E-transfer', issued:true, paidOn:'2026-08-14' },
+        { id:'INV-121', leadId:'L-1058', jobId:'JOB-402', date:'2026-09-11', due:'2026-09-25', subtotal:700, gst:35, total:735, status:'Due', method:'Card on file (pending processor)', issued:true },
+        { id:'INV-109', leadId:'L-1048', jobId:'', date:'2026-07-02', due:'2026-07-17', subtotal:420, gst:21, total:441, status:'Overdue', method:'Net 15', issued:true }
+      ],
+      agreements: [
+        { id:'AGR-12', leadId:'L-1060', title:'Quarterly envelope monitor', freq:'Quarterly', next:'2026-08-12', value:900, status:'Active', includes:'Station check, gap audit, sparrow net inspect' },
+        { id:'AGR-14', leadId:'L-1058', title:'Bed bug series — 3 visits', freq:'14-day series', next:'2026-09-25', value:2100, status:'Active', includes:'Visit 1 heat/chem per label + follow-ups' },
+        { id:'AGR-08', leadId:'L-1048', title:'Commercial exclusion + Q monitor', freq:'Quarterly after retrofit', next:'Pending signed proposal', value:1560, status:'Draft', includes:'Sill seals, quarterly trend report' }
+      ],
+      devices: [
+        { id:'ST-01', leadId:'L-1060', kind:'Tamper station', loc:'Warehouse north wall, bay 2', last:'2026-08-12', result:'Clean', next:'2026-12-04' },
+        { id:'ST-02', leadId:'L-1060', kind:'Tamper station', loc:'Overhead door interior jamb', last:'2026-08-12', result:'Touched — reset', next:'2026-12-04' },
+        { id:'ST-03', leadId:'L-1042', kind:'Covered snap', loc:'Garage SE corner after seals', last:'—', result:'Not placed — seals first', next:'After JOB-401' },
+        { id:'ST-04', leadId:'L-1058', kind:'Interceptor', loc:'Unit 612 bed legs', last:'2026-09-11', result:'Set this visit', next:'2026-09-25' }
+      ],
+      usages: [
+        { id:'U-11', jobId:'JOB-404', date:'2026-08-12', product:'EX-SEAL', qty:'2 tubes', area:'Overhead corners + utility sleeve', pest:'Mice / sparrow gap', weather:'18 C, dry', tech:'T1', pcp:'n/a — hardware', note:'Physical exclusion only.' }
+      ],
+      comms: [
+        { id:'C-20', leadId:'L-1042', channel:'SMS', template:'remind', date:'2026-09-10', status:'Queued', preview:'Maya — booked 12 Sep 08:30 Altadore. Reply C to confirm.' },
+        { id:'C-21', leadId:'L-1058', channel:'Email', template:'prep', date:'2026-09-10', status:'Sent', preview:'Prep sheet for unit 612 series visit 1.' }
+      ],
+      suppliers: [
+        { id:'SUP-VES', name:'Veseris', kind:'Distributor', city:'Western Canada desk', pay:'Account', note:'Stations, labelled product, PPE. Confirm PCP on the carton — never from memory.' },
+        { id:'SUP-TGT', name:'Target Specialty Products', kind:'Distributor', city:'Western desk', pay:'Account', note:'Hardware, weeps, residuals. Same label rule.' },
+        { id:'SUP-NOS', name:'Nosis', kind:'Supplier', city:'To confirm', pay:'Account', note:'Owner: lock legal name, GST #, and what we actually buy here.' },
+        { id:'SUP-KIN', name:'Kin', kind:'Supplier', city:'To confirm', pay:'Account', note:'Owner: lock legal name and category (device vs chemical vs exclusion).' }
+      ],
+      purchases: [
+        { id:'PO-2408', supplierId:'SUP-VES', date:'2026-08-14', sku:'STAT-TR', item:'Tamper stations', qty:8, subtotal:312, gst:15.60, total:327.60, status:'Paid', jobId:'' },
+        { id:'PO-2409', supplierId:'SUP-TGT', date:'2026-08-28', sku:'WEEP-B', item:'Weep guards brick', qty:40, subtotal:186, gst:9.30, total:195.30, status:'Paid', jobId:'' },
+        { id:'PO-2410', supplierId:'SUP-VES', date:'2026-09-04', sku:'SEAL-EXT', item:'Exterior sealant', qty:6, subtotal:84, gst:4.20, total:88.20, status:'Received', jobId:'' },
+        { id:'PO-2411', supplierId:'SUP-NOS', date:'2026-09-09', sku:'MESH-6', item:'Hardware cloth 6 mm', qty:4, subtotal:96, gst:4.80, total:100.80, status:'Ordered', jobId:'' }
+      ],
+      vehicles: [
+        { id:'VAN-1', name:'SW route van', plate:'PLACEHOLDER', km:84210, nextOil:'2026-10-15', nextTires:'2026-11-01', nextSafety:'2026-12-01', note:'Block heater before −20. Winter tires on by 1 Nov.' }
+      ],
+      equipment: [
+        { id:'EQ-SPR', name:'Backpack / tank sprayer', interval:'Each season + after rinse', next:'2026-05-01', note:'Hose, wand tip, lock-out. Rinse per label — not a guess.' },
+        { id:'EQ-LAD', name:'Extension ladder + standoff', interval:'Before wasp season', next:'2026-05-15', note:'Feet, rungs, rope. No eave work if tagged out.' },
+        { id:'EQ-THM', name:'Thermal camera', interval:'Annual', next:'2026-09-30', note:'Battery + calibration check. Used on envelope surveys.' },
+        { id:'EQ-MST', name:'Moisture meter', interval:'Annual', next:'2026-09-30', note:'Rim-joist work. Recalibrate if readings drift.' },
+        { id:'EQ-PPE', name:'Respirator fit / cartridges', interval:'Per manufacturer + use', next:'2026-10-01', note:'Applicator kit. Do not invent change-out hours.' }
+      ],
+      maint: [
+        { id:'M-88', asset:'VAN-1', date:'2026-08-20', kind:'Oil + filter', km:83100, cost:184.80, shop:'Dealer / indie — log the invoice', status:'Done' },
+        { id:'M-89', asset:'EQ-SPR', date:'2026-08-22', kind:'Tip + hose inspect, rinse log', km:'', cost:0, shop:'In-house', status:'Done' },
+        { id:'M-90', asset:'VAN-1', date:'2026-11-01', kind:'Winter tires on', km:'', cost:0, shop:'Booked', status:'Scheduled' }
+      ],
+      inventory: [
+        { sku:'MESH-6', name:'Hardware cloth 6 mm', par:8, onhand:5, season:'Mouse window' },
+        { sku:'WEEP-B', name:'Weep guards brick', par:40, onhand:12, season:'Heritage SW' },
+        { sku:'SEAL-EXT', name:'Exterior sealant', par:12, onhand:4, season:'Year-round' },
+        { sku:'SNAP-CV', name:'Covered snaps', par:24, onhand:18, season:'Rodent' },
+        { sku:'STAT-TR', name:'Tamper stations', par:16, onhand:9, season:'Monitor contracts' }
+      ],
+      punches: [
+        { id:'P-1', tech:'T1', jobId:'JOB-404', start:'08:42', end:'', date:'2026-09-11' },
+        { id:'P-2', tech:'T3', jobId:'JOB-402', start:'10:28', end:'', date:'2026-09-11' }
+      ],
+      bookings: [
+        { id:'BK-01', name:'Samira Cole', community:'Marda Loop', pest:'Mice in garage', window:'Weekday morning', status:'New request', note:'Found frameworkpest.ca', pay:'Will e-transfer', phone:'403-555-0188', email:'samira@email.com', zone:'SW' }
+      ],
+      reviews: [
+        { id:'RV-01', leadId:'L-1060', asked:'2026-08-13', status:'Asked', note:'After Q visit' }
+      ],
+      lark: [
+        { id:'LK-01', kind:'scheduled', jobId:'JOB-401', sent:false, wired:false, reason:'queued', at:'2026-09-10T18:00:00', title:'Job booked · Altadore inspect' }
+      ],
+      larkCfg: { endpoint:'https://open.larksuite.com', chat:'#dispatch', wired:false },
+      workspace: [],
+      drips: [
+        { id:'DR-01', leadId:'L-1048', seq:'quote', step:'Day 2 follow', due:'2026-09-10', status:'Due', template:'quote2' },
+        { id:'DR-02', leadId:'L-1060', seq:'aftercare', step:'48h check', due:'2026-08-15', status:'Sent', template:'aftercare' }
+      ],
+      calls: [
+        { id:'CALL-11', at:'2026-09-11T10:38:00', who:'Owen Brooks', phone:'587-555-0166', result:'Missed', minutes:0, leadId:'L-1055', note:'Voicemail. SLA clock running.' },
+        { id:'CALL-10', at:'2026-09-11T08:02:00', who:'Priya Nair', phone:'403-555-0118', result:'Answered', minutes:9, leadId:'L-1051', note:'Night inspect window booked.' },
+        { id:'CALL-09', at:'2026-09-10T16:12:00', who:'Unknown', phone:'403-555-0100', result:'Abandoned', minutes:0, leadId:'', note:'Hung before pickup. No message.' }
+      ],
+      referrals: [
+        { id:'REF-01', fromLead:'L-1060', toName:'Neighbour 32 Ave', status:'Credited', note:'Nine-around after Q monitor. $0 until they book inspect.' }
+      ],
+      photos: [
+        { id:'PH-01', inspId:'INS-887', key:'d0', slot:'Before', caption:'NW foundation crack — 12 mm, mouse-capable', dataUrl:'' },
+        { id:'PH-02', inspId:'INS-887', key:'d1', slot:'Before', caption:'Unsealed AC line-set and gas sleeve, east wall', dataUrl:'' },
+        { id:'PH-03', inspId:'INS-887', key:'d2', slot:'Before', caption:'Crushed overhead-door seal, both bottom corners', dataUrl:'' },
+        { id:'PH-04', inspId:'INS-887', key:'d3', slot:'Before', caption:'Open brick weeps — guard, do not mortar shut', dataUrl:'' },
+        { id:'PH-05', inspId:'INS-887', key:'site', slot:'Site', caption:'14 Westmount Rd SW — grade and downspouts', dataUrl:'' },
+        { id:'PH-06', inspId:'INS-887', key:'moisture', slot:'Moisture', caption:'Rim joist moisture reading, NW corner', dataUrl:'' },
+        { id:'PH-07', inspId:'INS-887', key:'thermal', slot:'Thermal', caption:'Cold bridge at hose-bib sleeve', dataUrl:'' }
+      ]
+    });
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(KEY) || localStorage.getItem('framework-os-v5') || localStorage.getItem('framework-os-v4');
+        if (raw) {
+          const s = JSON.parse(raw);
+          const base = seed();
+          Object.keys(base).forEach(k => { if (s[k] == null) s[k] = base[k]; });
+          return normalizeState(s);
+        }
+      } catch(e) {}
+      const s = seed(); save(s); return normalizeState(s);
+    }
+    function save(state) {
+      localStorage.setItem(KEY, JSON.stringify(state));
+      if (shopSession) schedulePush();
+    }
+    let state = load();
+    let shopSession = null;
+    let pushTimer = null;
+    function schedulePush(){
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(pushBoard, 500);
+    }
+    async function pushBoard(){
+      if(!shopSession) return;
+      await fetch('/api/board', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ state }) });
+    }
+    function showLogin(msg){
+      document.getElementById('app').innerHTML = `
+        <div style="min-height:100vh;background:#F4F2EC;color:#15361E;display:flex;align-items:center;justify-content:center;padding:24px;font-family:Outfit,sans-serif">
+          <form id="shop-login" style="width:100%;max-width:22rem;background:#fff;border:1px solid rgba(21,54,30,.12);border-radius:24px;padding:24px">
+            <div style="letter-spacing:.16em;text-transform:uppercase;font-size:11px;opacity:.55">Framework Pest Ltd.</div>
+            <h1 style="font-size:32px;margin:8px 0 8px">Shop sign-in</h1>
+            <p style="font-size:14px;opacity:.7;margin:0 0 16px">One board for the office and the truck. The book link stays open without this pin.</p>
+            <label style="display:block;font-size:14px">Your name<input name="name" required value="Shop" style="display:block;width:100%;margin-top:6px;padding:10px 12px;border-radius:12px;border:1px solid rgba(21,54,30,.2);background:#F4F2EC"/></label>
+            <label style="display:block;font-size:14px;margin-top:12px">Shop pin<input name="pin" type="password" inputmode="numeric" required style="display:block;width:100%;margin-top:6px;padding:10px 12px;border-radius:12px;border:1px solid rgba(21,54,30,.2);background:#F4F2EC"/></label>
+            <button style="margin-top:16px;background:#15361E;color:#F4F2EC;border:0;border-radius:999px;padding:10px 16px">Open the board</button>
+            <p id="login-err" style="color:#F2733A;font-size:13px;min-height:1.2em">${msg||''}</p>
+          </form>
+        </div>`;
+      document.getElementById('shop-login').onsubmit = async (e)=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const res = await fetch('/api/login', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: fd.get('name'), pin: fd.get('pin') }) });
+        if(!res.ok){ showLogin('That pin did not match.'); return; }
+        await startShop();
+      };
+    }
+    async function startShop(){
+      const ses = await fetch('/api/session', { credentials:'same-origin' }).then(r=>r.json());
+      if(!ses.ok){ showLogin(''); return; }
+      shopSession = ses;
+      const board = await fetch('/api/board', { credentials:'same-origin' }).then(r=>r.json());
+      if(board.state && board.state.leads){
+        state = normalizeState(board.state);
+        localStorage.setItem(KEY, JSON.stringify(state));
+      } else {
+        await pushBoard();
+      }
+      render();
+    }
+    let view = 'dashboard';
+    let selectedLead = null;
+    let selectedInsp = state.inspections[0]?.id || null;
+    let selectedJob = null;
+    let selectedDay = '2026-09-11';
+    let toast = '';
+    let portalLead = 'L-1042';
+
+    function money(n){ return new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(n||0); }
+    function digits(p){ return String(p||'').replace(/\D/g,''); }
+    function isCommercial(type){ return /commercial|warehouse|industrial/i.test(type||''); }
+    function addDaysISO(iso, n){
+      const d = new Date((iso||'2026-09-11').slice(0,10)+'T12:00:00');
+      d.setDate(d.getDate()+n);
+      return d.toISOString().slice(0,10);
+    }
+    function gstOf(sub){ return Math.round(Number(sub||0)*GST*100)/100; }
+    function shapeLead(f){
+      const type = f.type || 'Residential detached';
+      const commercial = isCommercial(type);
+      const access = (f.notes||'').replace(/code\s*\d+/ig,'see dispatch');
+      return {
+        id: f.id || uid('L'),
+        name: f.name, org: f.org || (f.name+' household'),
+        phone: f.phone||'', email: f.email||'',
+        community: f.community||'', zone: f.zone||'SW', type,
+        street: f.street||'',
+        payer: { name:f.name||'', phone:f.phone||'', email:f.email||'', org: f.payerOrg || f.org || '' },
+        site: { street:f.street||'', community:f.community||'', unit:f.unit||'', access:'see dispatch' },
+        pest: f.pest||'', evidence: f.evidence||'', urgency: f.urgency||'Medium',
+        stage: 'New lead', value: f.value||0, next: f.next||'Qualify + book envelope inspect',
+        notes: access, created: new Date().toISOString(), firstTouch:'',
+        source: f.source||'Web', pay: f.pay||'', referredBy: f.referredBy||'',
+        contract: '', approval: commercial ? 'Pending' : 'Not required'
+      };
+    }
+    function findDup(q){
+      const phone = digits(q.phone);
+      const email = String(q.email||'').trim().toLowerCase();
+      const street = String(q.street||'').trim().toLowerCase();
+      const community = String(q.community||'').trim().toLowerCase();
+      return (state.leads||[]).find(l=>{
+        const lp = digits(l.phone || (l.payer&&l.payer.phone));
+        const le = String(l.email || (l.payer&&l.payer.email) || '').trim().toLowerCase();
+        const ls = String((l.site&&l.site.street) || l.street || '').trim().toLowerCase();
+        const lc = String(l.community || (l.site&&l.site.community) || '').trim().toLowerCase();
+        if(phone && lp && phone.slice(-10)===lp.slice(-10)) return true;
+        if(email && le && email===le) return true;
+        if(street && ls && street===ls && community && lc && community===lc) return true;
+        return false;
+      });
+    }
+    function normalizeState(s){
+      (s.leads||[]).forEach(l=>{
+        if(l.stage==='Monitoring'){ l.stage='Won'; l.contract='Monitoring'; }
+        if(!l.created) l.created = new Date().toISOString();
+        if(l.firstTouch === undefined) l.firstTouch = l.stage==='New lead' ? '' : l.created;
+        if(!l.source) l.source = 'Unknown';
+        if(l.pay === undefined) l.pay = '';
+        if(l.referredBy === undefined) l.referredBy = '';
+        if(l.contract === undefined) l.contract = '';
+        if(!l.payer) l.payer = { name:l.name||'', phone:l.phone||'', email:l.email||'', org:l.org||'' };
+        if(!l.site) l.site = { street:l.street||'', community:l.community||'', unit:'', access:'see dispatch' };
+        if(l.approval===undefined) l.approval = isCommercial(l.type) ? 'Pending' : 'Not required';
+        if(/code\s*\d+|gate\s*\d+/i.test(l.notes||'')) l.notes = l.notes.replace(/code\s*\d+|gate\s*\d+/ig,'see dispatch');
+      });
+      (s.jobs||[]).forEach(j=>{
+        if(/code\s*\d+|gate\s*\d+/i.test(j.notes||'')) j.notes = j.notes.replace(/code\s*\d+|gate\s*\d+/ig,'see dispatch');
+      });
+      (s.proposals||[]).forEach(p=>{
+        const l = (s.leads||[]).find(x=>x.id===p.leadId);
+        if(p.approval===undefined) p.approval = (l && isCommercial(l.type)) ? 'Pending' : 'Not required';
+        if(p.gst==null) p.gst = gstOf(p.subtotal);
+      });
+      (s.invoices||[]).forEach(inv=>{
+        if(!inv.due) inv.due = addDaysISO(inv.date, 14);
+        if(inv.issued===undefined) inv.issued = inv.status!=='Draft';
+        if(!inv.method) inv.method = '';
+      });
+      return s;
+    }
+    function leadBy(id){ return (state.leads||[]).find(x=>x.id===id); }
+    function techBy(id){ return TECHS.find(x=>x.id===id); }
+    function jobBy(id){ return (state.jobs||[]).find(x=>x.id===id); }
+    function uid(prefix){ return prefix + '-' + Math.floor(1000 + Math.random()*9000); }
+    function showToast(msg){ toast = msg; render(); setTimeout(()=>{ toast=''; render(); }, 2200); }
+
+    function logo(size=28){
+      return `<svg width="${size}" height="${size}" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <rect x="4" y="6" width="28" height="10" rx="3" fill="#A9C0A0"/>
+        <rect x="4" y="20" width="16" height="9" rx="2" fill="#A9C0A0"/>
+        <path d="M24 20h12v9c0 5-4 9-9 9h-3V20z" fill="#F2733A"/>
+        <rect x="4" y="33" width="10" height="10" rx="2" fill="#A9C0A0"/>
+      </svg>`;
+    }
+
+    const BAYS = [
+      { id:'site', n:'01', title:'On the envelope', blurb:'Read the building', items:[
+        { id:'guard', label:'Envelope map' },
+        { id:'sop', label:'House walk' },
+        { id:'inspection', label:'Live inspect' },
+        { id:'id', label:'Pest ID' },
+        { id:'report', label:'Client report' }
+      ]},
+      { id:'run', n:'02', title:'On the route', blurb:'Who is where', items:[
+        { id:'dispatch', label:'Day board' },
+        { id:'route', label:'Stop order' },
+        { id:'jobs', label:'Work orders' },
+        { id:'tech', label:'Tech phone' },
+        { id:'fit', label:'Best Fit' },
+        { id:'brief', label:'Morning brief' }
+      ]},
+      { id:'desk', n:'03', title:'In the shop', blurb:'Leads to ink', items:[
+        { id:'dashboard', label:'Command' },
+        { id:'intake', label:'New ticket' },
+        { id:'crm', label:'Pipeline' },
+        { id:'proposals', label:'Proposals' },
+        { id:'book', label:'Rate card' },
+        { id:'territory', label:'YYC zones' },
+        { id:'density', label:'Density cells' },
+        { id:'bid', label:'Commercial bid' },
+        { id:'speed', label:'Speed-to-lead' },
+        { id:'phone', label:'Phone desk' },
+        { id:'refer', label:'Referrals' },
+        { id:'booklink', label:'Book link' },
+        { id:'follow', label:'Follow-up' }
+      ]},
+      { id:'cash', n:'04', title:'On the books', blurb:'GST and return', items:[
+        { id:'billing', label:'Invoices' },
+        { id:'agreements', label:'Contracts' },
+        { id:'cost', label:'Job cost' },
+        { id:'reviews', label:'Reviews' },
+        { id:'warranty', label:'Warranty desk' },
+        { id:'churn', label:'Churn' },
+        { id:'portal', label:'Client hub' },
+        { id:'comms', label:'Outbox' }
+      ]},
+      { id:'kit', n:'05', title:'On the truck', blurb:'Kit and record', items:[
+        { id:'chem', label:'Use log' },
+        { id:'devices', label:'Stations' },
+        { id:'inventory', label:'Par' },
+        { id:'compliance', label:'Alberta log' },
+        { id:'lark', label:'Lark' },
+        { id:'workspace', label:'Workspace' },
+        { id:'retail', label:'Retail counter' },
+        { id:'suppliers', label:'Suppliers' },
+        { id:'fleet', label:'Fleet & kit' }
+      ]}
+    ];
+    function bayOf(v){
+      if(v==='lead') return 'desk';
+      const hit = BAYS.find(b=>b.items.some(i=>i.id===v));
+      return hit?hit.id:'desk';
+    }
+    let openBay = bayOf(view);
+
+    function navBays(){
+      return BAYS.map(b=>{
+        const on = openBay===b.id;
+        const here = b.items.some(i=>i.id===view) || (view==='lead' && b.id==='desk');
+        return `<section class="bay ${here?'on':''}">
+          <button onclick="toggleBay('${b.id}')" class="w-full flex items-baseline justify-between gap-2 text-left">
+            <span>
+              <span class="text-forest/35 text-[10px] tracking-[0.18em] uppercase">${b.n}</span>
+              <span class="font-display block text-[15px] leading-tight text-forest">${b.title}</span>
+              <span class="text-[11px] text-forest/45">${b.blurb}</span>
+            </span>
+            <span class="text-[10px] text-sage/50">${b.items.length}</span>
+          </button>
+          <div class="flex flex-wrap gap-1.5 mt-2.5 ${on?'flex':'hidden'}">
+            ${b.items.map(i=>`<button onclick="go('${i.id}')" class="navchip ${view===i.id?'on':''}">${i.label}</button>`).join('')}
+          </div>
+        </section>`;
+      }).join('');
+    }
+
+    window.toggleBay = (id)=>{ openBay = openBay===id?id:id; render(); };
+    window.go = (v)=>{ view=v; openBay = bayOf(v); render(); };
+    window.selectLead = (id)=>{ selectedLead=id; view='lead'; render(); };
+    window.selectInsp = (id)=>{ selectedInsp=id; view='inspection'; render(); };
+
+    function shell(content){
+      return `
+      <div class="min-h-screen flex flex-col lg:flex-row">
+        <aside class="no-print bg-white text-forest w-full lg:w-72 lg:min-h-screen p-4 border-r border-forest/10">
+          <div class="flex items-center gap-3 mb-6">
+            ${logo(36)}
+            <div>
+              <div class="font-display font-semibold leading-tight">Framework OS</div>
+              <div class="text-[11px] text-forest/45">Guard · Dispatch · Cash · sales ends at Won</div>
+            </div>
+          </div>
+          <div class="flex gap-2 mb-4">
+            <button onclick="go('intake')" class="flex-1 bg-forest text-offwhite text-xs font-display rounded-full py-2">New ticket</button>
+            <button onclick="go('tech')" class="flex-1 border border-forest/15 text-forest text-xs font-display rounded-full py-2">Tech phone</button>
+          </div>
+          ${navBays()}
+          <div class="mt-4 pt-3 border-t border-forest/10 text-[11px] text-forest/55">
+            <div class="font-display text-forest">${state.user.name}</div>
+            ${state.user.role}<br/>${state.user.shop}
+            <div class="mt-2">11 Sep 2026 · Calgary</div>
+          </div>
+        </aside>
+        <main class="flex-1 p-4 lg:p-8 max-w-6xl">
+          ${toast?`<div class="mb-4 bg-forest text-offwhite px-4 py-2 rounded-full inline-block text-sm">${toast}</div>`:''}
+          <div class="no-print mb-4 text-[11px] tracking-[0.18em] uppercase text-forest/45">${(BAYS.find(b=>b.id===bayOf(view))||{}).n||''}  ${(BAYS.find(b=>b.id===bayOf(view))||{}).title||''}</div>
+          ${content}
+        </main>
+      </div>`;
+    }
+
+    function kpis(){
+      const open = state.leads.filter(l=>l.stage!=='Won').length;
+      const won = state.leads.filter(l=>l.stage==='Won').reduce((a,l)=>a+l.value,0);
+      const pipe = state.leads.filter(l=>l.stage!=='Won').reduce((a,l)=>a+l.value,0);
+      const defects = state.inspections.reduce((a,i)=>a+i.defects.length,0);
+      const todayJobs = (state.jobs||[]).filter(j=>j.date===selectedDay && !['Cancelled','Complete'].includes(j.status)).length;
+      const ar = (state.invoices||[]).filter(x=>x.status!=='Paid').reduce((a,x)=>a+x.total,0);
+      const calls = state.calls||[];
+      const missed = calls.filter(c=>c.result==='Missed'||c.result==='Abandoned').length;
+      const missPct = calls.length? Math.round(missed/calls.length*100)+'%' : '—';
+      const touched = state.leads.filter(l=>l.created && l.firstTouch);
+      const avgMin = touched.length? Math.round(touched.reduce((a,l)=>a+((new Date(l.firstTouch)-new Date(l.created))/60000),0)/touched.length) : 0;
+      const slaBreach = state.leads.filter(l=>!l.firstTouch && l.stage==='New lead').length;
+      const asked = (state.reviews||[]).length;
+      const atRisk = (state.agreements||[]).filter(a=>a.status==='Active' && (!leadBy(a.leadId)||!leadBy(a.leadId).pay)).length
+        + (state.agreements||[]).filter(a=>a.status==='Held').length;
+      return [
+        { l:'Open pipeline', v:money(pipe), s:'Envelope + monitoring work' },
+        { l:'Won / monitoring', v:money(won), s:'Recurring protection' },
+        { l:'Stops today', v:String(todayJobs), s:selectedDay+' still open' },
+        { l:'AR outstanding', v:money(ar), s:'Due + overdue' },
+        { l:'Missed / abandoned', v:missPct, s:missed+' of '+(calls.length||0)+' logged calls' },
+        { l:'Min to first touch', v:touched.length? String(avgMin):'—', s:slaBreach+' sitting on the 15-min SLA' },
+        { l:'Review asks on file', v:String(asked), s:'Do not ask mid-callback' },
+        { l:'Churn watch', v:String(atRisk), s:'Held or no pay method' }
+      ];
+    }
+
+    function viewDashboard(){
+      const cards = kpis().map(k=>`
+        <div class="bg-white rounded-2xl p-5 border border-forest/10">
+          <div class="text-xs uppercase tracking-widest text-forest/50">${k.l}</div>
+          <div class="font-display text-3xl font-semibold mt-1">${k.v}</div>
+          <div class="text-sm text-forest/60 mt-1">${k.s}</div>
+        </div>`).join('');
+      const today = state.leads.filter(l=>['Inspect booked','Qualified','Won'].includes(l.stage));
+      return shell(`
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Structural pest control · Calgary</div>
+            <h1 class="font-display text-4xl font-semibold mt-1">Building pathology, not spray routes.</h1>
+            <p class="mt-2 max-w-2xl text-forest/70">First fall frost is typically ~15 Sep. This is the mouse-proofing window — seal the envelope before the next cold snap, then monitor.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="go('speed')" class="border border-forest/20 px-4 py-3 rounded-full font-display">SLA board</button>
+            <button onclick="go('intake')" class="bg-forest text-offwhite px-5 py-3 rounded-full font-display font-semibold">New intake</button>
+          </div>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">${cards}</div>
+        <section class="bg-white rounded-2xl p-5 border border-forest/10 mb-8 text-sm">
+          <div class="font-display text-lg">Live in this file vs not wired yet</div>
+          <p class="text-forest/70 mt-1">The boards below run on this device. Card charges, SMS, GPS, and accounting export need shop accounts — those buttons queue work, they do not talk to a bank or a tower.</p>
+          <div class="grid md:grid-cols-2 gap-3 mt-3">
+            <div><div class="text-xs uppercase tracking-widest text-forest/40">Works here</div>Dispatch, Best Fit slot, price book, invoices + GST, material log, devices, truck par, comms drafts, e-sign on a proposal, job cost math, review queue, client hub.</div>
+            <div><div class="text-xs uppercase tracking-widest text-forest/40">Needs a vendor</div>Live truck GPS, Stripe/Moneris AutoPay, Twilio/Workspace send, QuickBooks, Maps traffic, Sentricon. Lark cards send only when App ID + Secret + chat id are in env.</div>
+          </div>
+        </section>
+        <div class="grid lg:grid-cols-3 gap-6">
+          <section class="lg:col-span-2 bg-white rounded-3xl p-6 border border-forest/10">
+            <h2 class="font-display text-2xl">Today’s structural work</h2>
+            <div class="mt-4 space-y-3">${today.map(l=>`
+              <button onclick="selectLead('${l.id}')" class="w-full text-left bg-offwhite hover:bg-sage/20 rounded-2xl p-4 flex justify-between gap-3">
+                <div>
+                  <div class="font-display font-semibold">${l.org}</div>
+                  <div class="text-sm text-forest/60">${l.community} · ${l.pest}</div>
+                  <div class="text-xs mt-1 text-forest/45">${l.next}</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-forest/50 text-xs uppercase">${l.urgency}</div>
+                  <div class="font-display">${money(l.value)}</div>
+                </div>
+              </button>`).join('')}</div>
+          </section>
+          <section class="bg-white rounded-3xl p-6 border border-forest/10">
+            <h2 class="font-display text-xl">Season brief</h2>
+            <ul class="mt-3 space-y-2 text-sm">
+              <li><strong>Now:</strong> mouse-capable gaps at grade, garage seals, utility sleeves.</li>
+              <li><strong>Still active:</strong> late wasp nests at eaves if days stay warm.</li>
+              <li><strong>Do not sell:</strong> termite treatments. Not established in Alberta.</li>
+              <li><strong>Method:</strong> inspect → exclude → sanitation → labelled product only if needed.</li>
+            </ul>
+            <p class="text-xs mt-4 text-forest/60">Placeholder commercial figures until the shop price book is loaded. GST extra on proposals.</p>
+          </section>
+        </div>
+      `);
+    }
+
+    function viewIntake(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Calgary ticket</div>
+        <h1 class="font-display text-4xl font-semibold mt-1 mb-6">Intake</h1>
+        <form onsubmit="return submitIntake(event)" class="grid md:grid-cols-2 gap-4 bg-white rounded-3xl p-6 border border-forest/10">
+          ${field('name','Payer name')}
+          ${field('org','Site name')}
+          <label class="text-sm">Street <span class="text-forest/40">(optional — used to catch a duplicate site)</span>
+            <input name="street" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite" placeholder="14 Westmount Rd SW"/>
+          </label>
+          ${field('phone','Payer phone')}
+          ${field('email','Payer email')}
+          ${field('community','Community')}
+          <label class="text-sm">Territory
+            <select name="zone" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite">${TERRITORIES.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select>
+          </label>
+          <label class="text-sm">Building type
+            <select name="type" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite">
+              <option>Residential detached</option><option>Townhouse</option><option>Multi-unit</option>
+              <option>Commercial office</option><option>Commercial kitchen</option><option>Warehouse / bay</option>
+            </select>
+          </label>
+          <label class="text-sm">Urgency
+            <select name="urgency" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite">
+              <option>High</option><option>Medium</option><option>Low</option>
+            </select>
+          </label>
+          <label class="text-sm">Source
+            <select name="source" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite">
+              <option>GBP</option><option>Web</option><option>Missed call</option><option>Phone</option><option>Referral</option><option>Nine-around</option><option>PM email</option><option>Walk-in</option>
+            </select>
+          </label>
+          <label class="text-sm">Referred by
+            <input name="referredBy" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite" placeholder="Neighbour, PM, last job…"/>
+          </label>
+          ${field('pest','Pest hypothesis')}
+          <label class="text-sm md:col-span-2">What they actually saw
+            <textarea name="evidence" rows="3" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite" placeholder="Droppings, trails, nest, sounds, bites…"></textarea>
+          </label>
+          <label class="text-sm">Photo of what they saw
+            <input type="file" name="saw" accept="image/*" class="mt-1 w-full text-xs"/>
+          </label>
+          <label class="text-sm">Pay method
+            <select name="pay" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite">
+              <option value="">None yet</option>
+              <option>E-transfer</option>
+              <option>Card pending</option>
+              <option>PO</option>
+              <option>Call first</option>
+            </select>
+          </label>
+          <label class="text-sm md:col-span-2">Site notes
+            <textarea name="notes" rows="2" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite" placeholder="Pets, kids. Gate codes stay off this record — write see dispatch."></textarea>
+          </label>
+          <div class="md:col-span-2 flex justify-end">
+            <button class="bg-forest text-offwhite px-6 py-3 rounded-full font-display font-semibold">File ticket into CRM</button>
+          </div>
+        </form>
+        <p class="text-xs text-forest/50 mt-3">Same ticket shape as the book link. A matching phone, email, or street+community opens the file that is already there. GST is a tax, not a line on this form.</p>
+      `);
+    }
+    function field(name,label){
+      return `<label class="text-sm">${label}<input name="${name}" required class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite"/></label>`;
+    }
+    window.submitIntake = (e)=>{
+      e.preventDefault();
+      const f = Object.fromEntries(new FormData(e.target).entries());
+      const dup = findDup(f);
+      if(dup){
+        selectedLead = dup.id; view='lead';
+        showToast('Already on file — '+dup.id+' · '+dup.org);
+        return false;
+      }
+      const lead = shapeLead(f);
+      const file = e.target.saw && e.target.saw.files && e.target.saw.files[0];
+      const finish = ()=>{
+        enrollDrip(lead.id, 'newlead');
+        state.leads.unshift(lead); save(state); selectedLead=lead.id; view='lead'; showToast('Ticket '+lead.id+' in CRM');
+      };
+      if(file){
+        const r = new FileReader();
+        r.onload = ()=>{
+          state.photos = state.photos||[];
+          state.photos.unshift({ id:uid('PH'), leadId:lead.id, key:'saw', slot:'What they saw', caption:f.evidence||'Intake still', dataUrl:r.result });
+          finish();
+        };
+        r.readAsDataURL(file);
+      } else finish();
+      return false;
+    };
+
+    function viewCRM(){
+      const cols = PIPE.map(stage=>{
+        const items = state.leads.filter(l=>l.stage===stage);
+        return `<div class="bg-white/70 rounded-2xl p-3 min-w-[210px] flex-1">
+          <div class="flex justify-between items-center mb-3">
+            <div class="font-display font-semibold">${stage}</div>
+            <span class="text-xs bg-sage/50 px-2 py-0.5 rounded-full">${items.length}</span>
+          </div>
+          <div class="space-y-2 kanban">${items.map(l=>`
+            <button onclick="selectLead('${l.id}')" class="w-full text-left bg-offwhite border border-forest/10 rounded-xl p-3 hover:border-safety">
+              <div class="font-display text-sm font-semibold">${l.org}</div>
+              <div class="text-[11px] text-forest/60">${l.community} · ${l.pest}</div>
+              <div class="flex justify-between mt-2 text-xs"><span class="text-forest/50">${l.urgency}</span><span>${l.value?money(l.value):'TBD'}</span></div>
+            </button>`).join('')}</div>
+        </div>`;
+      }).join('');
+      return shell(`
+        <div class="flex items-end justify-between mb-6">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Sales Hub</div>
+            <h1 class="font-display text-4xl font-semibold">CRM pipeline</h1>
+            <p class="text-forest/70 mt-1">Sales stops at Won. Monitoring is the agreement, not a pipeline column.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 overflow-x-auto pb-4">${cols}</div>
+        <h2 class="font-display text-xl mt-6 mb-2">Won — on a contract</h2>
+        ${state.leads.filter(l=>l.stage==='Won' && l.contract).map(l=>`
+          <div class="bg-white rounded-xl border border-forest/10 p-3 mb-2 text-sm flex justify-between">
+            <span>${l.org} · ${l.contract}</span><button onclick="selectLead('${l.id}')" class="underline text-xs">Open</button>
+          </div>`).join('')||'<p class="text-sm text-forest/50">None. A signed monitor lives under Agreements.</p>'}
+      `);
+    }
+
+    function viewLead(){
+      const l = state.leads.find(x=>x.id===selectedLead) || state.leads[0];
+      selectedLead = l.id;
+      const insp = state.inspections.filter(i=>i.leadId===l.id);
+      return shell(`
+        <button onclick="go('crm')" class="text-sm text-forest/60 no-print">← Pipeline</button>
+        <div class="flex flex-wrap justify-between gap-4 mt-2 mb-6">
+          <div>
+            <div class="text-forest/40 text-xs">${l.id} · ${l.zone}</div>
+            <h1 class="font-display text-4xl font-semibold">${l.org}</h1>
+            <p class="text-forest/70">${l.name} · ${l.community} · ${l.type}</p>
+          </div>
+          <div class="text-right">
+            <div class="font-display text-2xl">${l.value?money(l.value):'Unscoped'}</div>
+            <div class="text-sm">${l.stage}</div>
+          </div>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-2 space-y-4">
+            <section class="bg-white rounded-2xl p-5 border border-forest/10">
+              <h2 class="font-display text-xl mb-2">Payer and site</h2>
+              <p><strong>Payer:</strong> ${(l.payer&&l.payer.name)||l.name} · ${(l.payer&&l.payer.phone)||l.phone} · ${(l.payer&&l.payer.email)||l.email}</p>
+              <p class="mt-2"><strong>Site:</strong> ${l.org} · ${(l.site&&l.site.street)||l.street||'street not filed'} · ${l.community}${(l.site&&l.site.unit)?', '+l.site.unit:''}</p>
+              <p class="mt-2 text-sm text-forest/60">Access: ${(l.site&&l.site.access)||'see dispatch'}. Do not store gate codes on this record.</p>
+              ${l.contract?`<p class="mt-2 text-sm">Contract: ${l.contract} — not a sales stage.</p>`:''}
+              ${l.approval==='Pending'?'<p class="mt-2 text-sm">Commercial — approval required before e-sign.</p>':''}
+            </section>
+            <section class="bg-white rounded-2xl p-5 border border-forest/10">
+              <h2 class="font-display text-xl mb-2">Pathology brief</h2>
+              <p><strong>Hypothesis:</strong> ${l.pest}</p>
+              <p class="mt-2"><strong>Evidence:</strong> ${l.evidence}</p>
+              <p class="mt-2"><strong>Notes:</strong> ${l.notes||'—'}</p>
+            </section>
+            <section class="bg-white rounded-2xl p-5 border border-forest/10">
+              <h2 class="font-display text-xl mb-3">Inspections</h2>
+              ${insp.length?insp.map(i=>`<button onclick="selectInsp('${i.id}')" class="block w-full text-left mb-2 p-3 rounded-xl bg-offwhite">${i.id} · ${i.site} · ${i.defects.length} defects</button>`).join(''):'<p class="text-sm text-forest/60">No envelope survey yet.</p>'}
+              <button onclick="newInspect('${l.id}')" class="mt-2 bg-forest text-offwhite px-4 py-2 rounded-full text-sm font-display">Start Pest Guard survey</button>
+            </section>
+          </div>
+          <aside class="space-y-3">
+            <div class="bg-sage/40 rounded-2xl p-4 text-sm">
+              ${l.phone}<br/>${l.email}<br/>Next: ${l.next}<br/>
+              Source: ${l.source||'—'} · Pay: ${l.pay||'none'}<br/>
+              SLA: ${l.firstTouch?'touched':'OPEN — tap First touch'}
+            </div>
+            <button onclick="touchLead('${l.id}')" class="w-full border border-forest/20 rounded-full py-2 text-sm">Log first touch</button>
+            <button onclick="setPay('${l.id}')" class="w-full border border-forest/20 rounded-full py-2 text-sm">Pay method on file</button>
+            <label class="text-sm block">Move stage
+              <select onchange="moveStage('${l.id}', this.value)" class="mt-1 w-full rounded-xl px-3 py-2 bg-white border border-forest/15">
+                ${PIPE.map(s=>`<option ${s===l.stage?'selected':''}>${s}</option>`).join('')}
+              </select>
+            </label>
+            <button onclick="draftProposal('${l.id}')" class="w-full bg-forest text-offwhite rounded-full py-3 font-display font-semibold">Draft proposal</button>
+          </aside>
+        </div>
+      `);
+    }
+    window.moveStage = (id, stage)=>{
+      const l = state.leads.find(x=>x.id===id); l.stage=stage;
+      if(!l.firstTouch) l.firstTouch = new Date().toISOString();
+      save(state); showToast('Stage → '+stage);
+    };
+    window.touchLead = (id)=>{
+      const l = leadBy(id); if(!l) return;
+      if(!l.firstTouch) l.firstTouch = new Date().toISOString();
+      l.lastTouch = new Date().toISOString();
+      save(state); showToast('First touch stamped on '+l.id);
+    };
+    window.setPay = (id)=>{
+      const l = leadBy(id); if(!l) return;
+      l.pay = prompt('Pay method on file (E-transfer / PO / Card pending / empty = none)', l.pay||'') ?? l.pay;
+      save(state); render();
+    };
+    window.newInspect = (leadId)=>{
+      const l = state.leads.find(x=>x.id===leadId);
+      const insp = { id:uid('INS'), leadId, site:l.community+', Calgary AB', date:'2026-09-11', tech:state.user.name, moisture:'', thermal:'', attractants:'', recommendation:'', status:'In field', defects:[], sop:{} };
+      state.inspections.unshift(insp); save(state); selectedInsp=insp.id; view='inspection'; render();
+    };
+
+    function viewGuard(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Field tool</div>
+        <h1 class="font-display text-4xl font-semibold mb-6">Pest Guard</h1>
+        <div class="grid md:grid-cols-2 gap-4">
+          ${state.inspections.map(i=>{
+            const l = state.leads.find(x=>x.id===i.leadId);
+            return `<button onclick="selectInsp('${i.id}')" class="text-left bg-white rounded-3xl p-5 border border-forest/10 hover:border-safety">
+              <div class="text-xs text-forest/40">${i.id} · ${i.status}</div>
+              <div class="font-display text-2xl">${l?l.org:i.site}</div>
+              <div class="text-sm text-forest/60 mt-1">${i.site}</div>
+              <div class="mt-3 flex gap-2 flex-wrap">${i.defects.map(d=>`<span class="text-[11px] bg-offwhite border px-2 py-1 rounded-full">${d.zone} · ${d.severity}</span>`).join('')||'<span class="text-sm">No defects logged yet</span>'}</div>
+            </button>`;
+          }).join('')}
+        </div>
+      `);
+    }
+
+    function viewInspection(){
+      const i = state.inspections.find(x=>x.id===selectedInsp) || state.inspections[0];
+      if(!i) return shell('<p>No inspections.</p>');
+      selectedInsp = i.id;
+      const l = state.leads.find(x=>x.id===i.leadId);
+      return shell(`
+        <button onclick="go('guard')" class="text-sm text-forest/60 no-print">← Surveys</button>
+        <div class="flex flex-wrap justify-between gap-3 mt-2 mb-4">
+          <div>
+            <div class="text-forest/40 text-xs">${i.id} · ${i.date} · ${i.tech}</div>
+            <h1 class="font-display text-3xl font-semibold">${l?l.org:'Site'} envelope</h1>
+            <p class="text-forest/70">${i.site}</p>
+          </div>
+          <button onclick="go('report')" class="bg-forest text-offwhite px-5 py-3 rounded-full font-display no-print">Open report engine</button>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <section class="bg-white rounded-3xl p-5 border border-forest/10">
+            <h2 class="font-display text-xl mb-3">Structural defect map</h2>
+            <p class="text-sage text-sm mb-4">Tap a building zone to log an entry point. Weep holes stay open — guard them, do not mortar them closed.</p>
+            <div class="grid grid-cols-2 gap-2">${ZONES.map(z=>{
+              const hits = i.defects.filter(d=>d.zone===z.id);
+              return `<button onclick="addDefect('${i.id}','${z.id}')" class="text-left rounded-xl p-3 ${hits.length?'bg-forest text-offwhite zone-hot':'bg-white/10'}">
+                <div class="font-display text-sm">${z.label}</div>
+                <div class="text-[11px] opacity-80">${hits.length?hits.length+' logged':'+ add'}</div>
+              </button>`;
+            }).join('')}</div>
+          </section>
+          <section class="space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-forest/10">
+              <h3 class="font-display font-semibold mb-2">Logged deficiencies</h3>
+              ${i.defects.map((d,idx)=>`
+                <div class="border-b border-forest/10 py-2 text-sm">
+                  <div class="flex justify-between"><span class="font-semibold">${d.zone}</span><span class="${d.severity==='High'?'text-safety':'text-forest/50'}">${d.severity}</span></div>
+                  <div>${d.note}</div>
+                  <div class="grid grid-cols-2 gap-2 mt-2 no-print">${photoFrame(i.id,'d'+idx,'Before')}${photoFrame(i.id,'d'+idx,'After')}</div>
+                  <button class="text-xs text-forest/50 no-print" onclick="delDefect('${i.id}',${idx})">Remove</button>
+                </div>`).join('')||'<p class="text-sm text-forest/50">Map is empty.</p>'}
+            </div>
+            <label class="block text-sm">Moisture observations
+              <textarea onchange="patchInsp('${i.id}','moisture',this.value)" class="mt-1 w-full rounded-xl p-3 border border-forest/15 bg-white" rows="2">${i.moisture||''}</textarea>
+            </label>
+            <label class="block text-sm">Thermal imaging notes
+              <textarea onchange="patchInsp('${i.id}','thermal',this.value)" class="mt-1 w-full rounded-xl p-3 border border-forest/15 bg-white" rows="2">${i.thermal||''}</textarea>
+            </label>
+            <label class="block text-sm">Biological attractants
+              <textarea onchange="patchInsp('${i.id}','attractants',this.value)" class="mt-1 w-full rounded-xl p-3 border border-forest/15 bg-white" rows="2">${i.attractants||''}</textarea>
+            </label>
+            <label class="block text-sm">Exclusion recommendation
+              <textarea onchange="patchInsp('${i.id}','recommendation',this.value)" class="mt-1 w-full rounded-xl p-3 border border-forest/15 bg-white" rows="2">${i.recommendation||''}</textarea>
+            </label>
+          </section>
+        </div>
+        <section class="mt-8 bg-white rounded-3xl p-5 border border-forest/10">
+          <div class="flex flex-wrap justify-between gap-2 mb-3">
+            <h2 class="font-display text-xl">SOP walk — seven house systems</h2>
+            <span class="text-xs text-forest/50">Pass / Watch / Fail / n/a · original Framework protocol</span>
+          </div>
+          ${SOP.map(mod=>`
+            <div class="mb-5">
+              <div class="font-display font-semibold">${mod.title}</div>
+              <p class="text-xs text-forest/55 mb-2">${mod.why}</p>
+              ${mod.items.map(it=>{
+                const v = (i.sop&&i.sop[it.id])||'';
+                return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-b border-forest/5">
+                  <div class="flex-1 text-sm">${it.q}</div>
+                  <div class="flex gap-1">${['Pass','Watch','Fail','n/a'].map(st=>`
+                    <button onclick="setSop('${i.id}','${it.id}','${st}')" class="text-[11px] px-2 py-1 rounded-full border ${v===st?(st==='Fail'?'bg-forest text-offwhite border-safety':st==='Pass'?'bg-forest text-white border-forest':'bg-sage border-sage'):'border-forest/20'}">${st}</button>`).join('')}
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>`).join('')}
+        </section>
+      `);
+    }
+    window.addDefect = (id, zone)=>{
+      const note = prompt('Deficiency at '+zone+' (what failed, size, recommended seal):');
+      if(!note) return;
+      const severity = prompt('Severity: High / Medium / Low','High')||'Medium';
+      const i = state.inspections.find(x=>x.id===id);
+      i.defects.push({ zone, severity, note }); save(state); render();
+    };
+    window.delDefect = (id, idx)=>{
+      const i = state.inspections.find(x=>x.id===id); i.defects.splice(idx,1); save(state); render();
+    };
+    window.patchInsp = (id, key, val)=>{
+      const i = state.inspections.find(x=>x.id===id); i[key]=val; save(state);
+    };
+    window.setSop = (id, item, st)=>{
+      const i = state.inspections.find(x=>x.id===id);
+      if(!i.sop) i.sop = {};
+      i.sop[item] = st; save(state); render();
+    };
+
+    function viewSOP(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Pest Guard protocol</div>
+        <h1 class="font-display text-4xl font-semibold mt-1">Field SOP</h1>
+        <p class="max-w-3xl text-forest/70 mt-2 mb-6">Walk order follows a house-system inspection: lot first, then roof and walls, then structure, then below-grade, then attic, interiors last. Framework wrote these prompts for Calgary pest pathology. They are not a reproduction of any published home-inspection manual. Termites are not treated as an established Alberta pest.</p>
+        <ol class="space-y-3 mb-8 text-sm bg-white rounded-3xl p-6 border border-forest/10">
+          <li><strong>Kit.</strong> Flashlight, moisture meter, probe, binoculars, camera, ladder if safe, gloves, tape. Do not walk fragile roofing.</li>
+          <li><strong>Outside-in.</strong> Grade and downspouts tell you if the basement will be wet before you go downstairs.</li>
+          <li><strong>Follow the clue.</strong> A crack outdoors is checked on the matching interior bay. A stained eave is checked in the attic above it.</li>
+          <li><strong>Moisture first.</strong> Separate roof leak, plumbing leak, condensation, and ice dam before you name a pest.</li>
+          <li><strong>Close the walk.</strong> One last circuit. Every Fail becomes a deficiency line on the client report.</li>
+        </ol>
+        ${SOP.map(mod=>`
+          <article class="bg-white rounded-2xl p-5 border border-forest/10 mb-3">
+            <h2 class="font-display text-xl">${mod.title}</h2>
+            <p class="text-sm text-forest/60 mt-1">${mod.why}</p>
+            <ul class="mt-3 space-y-1 text-sm">${mod.items.map(it=>`<li class="pl-3 border-l-2 border-sage">${it.q}</li>`).join('')}</ul>
+          </article>`).join('')}
+        <p class="text-xs text-forest/50">Word templates live beside this app: Framework-SOP-Playbook.docx and Framework-Report-Sample-Altadore.docx.</p>
+      `);
+    }
+
+    function viewTerritory(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Sales Hub</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Territories</h1>
+        <p class="text-forest/70 mb-6 max-w-2xl">Calgary plus Airdrie, Cochrane, Chestermere, Okotoks, and Rocky View. Confirm drive time before same-day promises.</p>
+        <div class="grid md:grid-cols-2 gap-3">
+          ${TERRITORIES.map(t=>{
+            const n = state.leads.filter(l=>l.zone===t.id).length;
+            return `<div class="bg-white rounded-2xl p-5 border border-forest/10">
+              <div class="flex justify-between"><div class="font-display text-xl">${t.name}</div><span class="text-sm bg-sage/40 px-2 py-0.5 rounded-full">${n} files</span></div>
+              <p class="text-sm text-forest/70 mt-2">${t.focus}</p>
+            </div>`;
+          }).join('')}
+        </div>
+      `);
+    }
+
+    function viewProposals(){
+      return shell(`
+        <div class="flex justify-between items-end mb-6">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Agreements</div>
+            <h1 class="font-display text-4xl font-semibold">Proposals</h1>
+          </div>
+        </div>
+        <p class="text-sm text-forest/60 mb-4">Figures are placeholders until Framework overwrites the price book. GST 5% applied.</p>
+        <div class="space-y-3">
+          ${state.proposals.map(p=>{
+            const l = state.leads.find(x=>x.id===p.leadId);
+            return `<div class="bg-white rounded-2xl p-5 border border-forest/10 flex flex-wrap justify-between gap-3">
+              <div>
+                <div class="text-xs text-forest/40">${p.id} · ${p.status} · valid ${p.valid}</div>
+                <div class="font-display text-xl">${p.title}</div>
+                <div class="text-sm">${l?l.org:''} · ${p.package}</div>
+                <div class="text-xs mt-1">${p.approval==='Pending'?'Approval pending':p.approval==='Approved'?'Approved':'Residential — no bid approval'}</div>
+              </div>
+              <div class="text-right font-display">
+                <div>${money(p.subtotal)} + GST</div>
+                <div class="text-2xl">${money(p.total)}</div>
+                ${p.approval==='Pending'?`<button onclick="approveProposal('${p.id}')" class="mt-2 text-xs border px-3 py-1 rounded-full">Approve bid</button>`:''}
+                ${p.signed?'<div class="text-xs text-forest mt-1">Signed</div>':`<button onclick="signProposal('${p.id}')" class="mt-2 text-xs bg-forest text-white px-3 py-1 rounded-full">Capture e-sign</button>`}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      `);
+    }
+    window.draftProposal = (leadId)=>{
+      const l = state.leads.find(x=>x.id===leadId);
+      const subtotal = l.value || 1850;
+      const gst = Math.round(subtotal*GST*100)/100;
+      const commercial = isCommercial(l.type);
+      const p = { id:uid('PR'), leadId, title:'Envelope exclusion + follow-up', package:'Structural IPM (placeholder pricing)', subtotal, gst, total:subtotal+gst, valid:'2026-10-09', status:'Draft', approval: commercial?'Pending':'Not required' };
+      state.proposals.unshift(p); l.stage='Proposal sent'; save(state); view='proposals'; showToast('Proposal '+p.id+' drafted');
+    };
+
+    function photoFrame(inspId, key, slot){
+      const p = (state.photos||[]).find(x=>x.inspId===inspId && x.key===key && x.slot===slot);
+      if(p && p.dataUrl){
+        return `<figure class="photo-slot filled">
+          <img src="${p.dataUrl}" alt="${(p.caption||slot).replace(/"/g,'')}" />
+          <figcaption>${slot}${p.caption? ' · '+p.caption:''}</figcaption>
+        </figure>`;
+      }
+      return `<label class="photo-slot empty no-print">
+        <span class="font-display text-xs">${slot}</span>
+        <span class="text-[10px] opacity-70">Tap to place a photo</span>
+        <input type="file" accept="image/*" class="sr-only" onchange="attachReportPhoto('${inspId}','${key}','${slot}',this)" />
+      </label>
+      <div class="photo-slot empty print-only"><span class="font-display text-xs">${slot}</span><span class="text-[10px]">${p&&p.caption?p.caption:'Frame for field photo'}</span></div>`;
+    }
+    window.attachReportPhoto = (inspId, key, slot, input)=>{
+      const file = input.files && input.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        state.photos = state.photos || [];
+        const cap = prompt('Caption for this still', (state.photos.find(x=>x.inspId===inspId&&x.key===key&&x.slot===slot)||{}).caption || slot) || slot;
+        const existing = state.photos.find(x=>x.inspId===inspId && x.key===key && x.slot===slot);
+        if(existing){ existing.dataUrl = reader.result; existing.caption = cap; }
+        else state.photos.unshift({ id:uid('PH'), inspId, key, slot, caption:cap, dataUrl:reader.result });
+        save(state); render();
+      };
+      reader.readAsDataURL(file);
+    };
+
+    function viewReport(){
+      const i = state.inspections[0];
+      const l = i && state.leads.find(x=>x.id===i.leadId);
+      if(!i) return shell('<p>Complete a Pest Guard survey first.</p>');
+      return `
+      <div class="min-h-screen bg-offwhite">
+        <div class="no-print p-4 flex justify-between items-center bg-forest text-offwhite">
+          <button onclick="go('inspection')" class="text-sm">← Editor</button>
+          <div class="font-display">Client deficiency report</div>
+          <button onclick="window.print()" class="bg-forest text-offwhite px-4 py-2 rounded-full text-sm">Print / PDF</button>
+        </div>
+        <article class="max-w-3xl mx-auto bg-white my-6 p-8 lg:p-12 shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-40 h-40 border-l border-b border-safety rounded-bl-full"></div>
+          <header class="flex items-start justify-between mb-8">
+            <div class="flex gap-3 items-center">${logo(40)}
+              <div>
+                <div class="font-display text-xl font-semibold">Framework Pest Ltd.</div>
+                <div class="text-sm text-forest/50">Engineering Pest-Free Environments.</div>
+              </div>
+            </div>
+            <div class="text-right text-sm">${i.id}<br/>${i.date}<br/>Calgary, Alberta</div>
+          </header>
+          <h1 class="font-display text-4xl font-semibold leading-tight">Building envelope deficiency report</h1>
+          <p class="mt-3 text-forest/70">Prepared for ${l?l.org:i.site}. This is an architectural finding list. Chemical application is not the primary recommendation.</p>
+          <div class="grid grid-cols-2 gap-4 mt-8 text-sm">
+            <div><div class="text-xs uppercase tracking-widest text-forest/40">Site</div>${i.site}</div>
+            <div><div class="text-xs uppercase tracking-widest text-forest/40">Surveyor</div>${i.tech}</div>
+          </div>
+          <h2 class="font-display text-2xl mt-10 mb-3">Site stills</h2>
+          <div class="grid grid-cols-3 gap-3">
+            ${photoFrame(i.id,'site','Site')}
+            ${photoFrame(i.id,'moisture','Moisture')}
+            ${photoFrame(i.id,'thermal','Thermal')}
+          </div>
+          <h2 class="font-display text-2xl mt-10 mb-3">SOP findings</h2>
+          ${SOP.map(mod=>`
+            <div class="mt-4">
+              <div class="font-display font-semibold">${mod.title}</div>
+              <ul class="text-sm mt-1">${mod.items.map(it=>{
+                const v = (i.sop&&i.sop[it.id])||'Not marked';
+                return `<li class="flex justify-between gap-3 py-0.5"><span>${it.q}</span><span class="font-display ${v==='Fail'?'text-safety':''}">${v}</span></li>`;
+              }).join('')}</ul>
+            </div>`).join('')}
+          <h2 class="font-display text-2xl mt-10 mb-3">Observed breaches</h2>
+          <ol class="space-y-6">${i.defects.map((d,idx)=>`
+            <li class="border-l-2 border-safety pl-4">
+              <strong class="font-display">${d.zone} · ${d.severity}</strong>
+              <p class="text-sm mt-1">${d.note}</p>
+              <div class="grid grid-cols-2 gap-3 mt-3">
+                ${photoFrame(i.id,'d'+idx,'Before')}
+                ${photoFrame(i.id,'d'+idx,'After')}
+              </div>
+            </li>`).join('')}</ol>
+          <h2 class="font-display text-2xl mt-10 mb-3">Pathology notes</h2>
+          <p><strong>Moisture.</strong> ${i.moisture||'Not recorded.'}</p>
+          <p class="mt-2"><strong>Thermal.</strong> ${i.thermal||'Not recorded.'}</p>
+          <p class="mt-2"><strong>Attractants.</strong> ${i.attractants||'Not recorded.'}</p>
+          <h2 class="font-display text-2xl mt-10 mb-3">Recommended work</h2>
+          <p>${i.recommendation||'Seal listed openings with pest-rated materials. Install weep guards. Correct garage and utility closures. Monitor after exclusion — do not lead with rodenticide.'}</p>
+          <p class="mt-8 text-xs text-forest/50">Framework Pest Ltd. · frameworkpest.ca · Structural integrity, precision, stewardship. Alberta pesticide service work, where required, is performed by certified applicators following the product label and the provincial Code of Practice. This report does not invent label rates.</p>
+        </article>
+      </div>`;
+    }
+
+    function statusChip(st){
+      const hot = ['No-show','Overdue','Fail','Cancelled'].includes(st);
+      const go = ['Complete','Paid','Active','On site'].includes(st);
+      return `<span class="text-[11px] px-2 py-0.5 rounded-full ${hot?'bg-safety text-white':go?'bg-forest text-offwhite':'bg-sage/40 text-forest'}">${st}</span>`;
+    }
+
+    window.setDay = (d)=>{ selectedDay=d; render(); };
+    window.setJobStat = (id, st)=>{
+      const j = jobBy(id); if(!j) return;
+      j.status = st;
+      if(st==='En route'){
+        const open = (state.punches||[]).find(p=>p.jobId===id && !p.end);
+        if(!open) state.punches.unshift({ id:uid('P'), tech:j.tech, jobId:id, start:new Date().toTimeString().slice(0,5), end:'', date:j.date });
+      }
+      if(st==='On site'){
+        const open = (state.punches||[]).find(p=>p.jobId===id && !p.end);
+        if(!open) state.punches.unshift({ id:uid('P'), tech:j.tech, jobId:id, start:new Date().toTimeString().slice(0,5), end:'', date:j.date, kind:'On site' });
+      }
+      if(st==='No-show'){
+        const svc = SERVICES.find(s=>s.id==='SVC-NS');
+        const sub = svc.price;
+        const gst = Math.round(sub*GST*100)/100;
+        state.invoices.unshift({ id:uid('INV'), leadId:j.leadId, jobId:id, date:j.date, due:addDaysISO(j.date,14), subtotal:sub, gst, total:sub+gst, status:'Draft', issued:false, method:'No-show fee', plan:null });
+        sendTemplate(j.leadId, 'noshow');
+        save(state); showToast('No-show fee drafted');
+        return;
+      }
+      if(st==='Complete'){
+        const open = (state.punches||[]).find(p=>p.jobId===id && !p.end);
+        if(open) open.end = new Date().toTimeString().slice(0,5);
+        const svc = SERVICES.find(s=>s.id===j.svc) || SERVICES.find(s=>j.type && s.name.toLowerCase().includes(j.type.split(' ')[0].toLowerCase())) || SERVICES[0];
+        const sub = svc.price;
+        const gst = Math.round(sub*GST*100)/100;
+        state.invoices.unshift({ id:uid('INV'), leadId:j.leadId, jobId:id, date:j.date, due:addDaysISO(j.date,14), subtotal:sub, gst, total:sub+gst, status:'Draft', issued:false, method:'', sku:svc.id, plan:null });
+        state.reviews.unshift({ id:uid('RV'), leadId:j.leadId, asked:j.date, status:'Ready', note:'Ask after '+id });
+        sendTemplate(j.leadId, 'done');
+        save(state); showToast('Invoice from price book · review primed');
+        return;
+      }
+      save(state); render();
+    };
+    window.moveJob = (id, dir)=>{
+      const j = jobBy(id); if(!j) return;
+      const list = state.jobs.filter(x=>x.date===j.date && x.tech===j.tech).sort((a,b)=>a.order-b.order);
+      const i = list.findIndex(x=>x.id===id);
+      const k = i+dir; if(k<0||k>=list.length) return;
+      const tmp = list[i].order; list[i].order = list[k].order; list[k].order = tmp;
+      save(state); render();
+    };
+    window.optimizeRoute = (tech, date)=>{
+      const list = state.jobs.filter(j=>j.date===date && j.tech===tech && !['Cancelled'].includes(j.status));
+      list.sort((a,b)=> (a.zone||'').localeCompare(b.zone||'') || (a.driveMin||99)-(b.driveMin||99));
+      list.forEach((j,i)=> j.order = i+1);
+      save(state); showToast('Stops clustered by zone for '+ (techBy(tech)||{}).name);
+    };
+    window.bookJob = ()=>{
+      const leadId = prompt('Lead id', state.leads[0].id); if(!leadId) return;
+      const l = leadBy(leadId); if(!l) return showToast('Unknown lead');
+      if(!l.pay){
+        const ok = confirm(l.org+' has no e-transfer / PO / card note. Olson rule: do not roll the truck. Book anyway?');
+        if(!ok) return showToast('Held — collect pay method first');
+      }
+      const date = prompt('Date YYYY-MM-DD', selectedDay)||selectedDay;
+      const windowT = prompt('Window','09:00–11:00')||'Anytime';
+      const tech = prompt('Tech T1 / T2 / T3','T1')||'T1';
+      const type = prompt('Work type','Exclusion / monitor')||'Service';
+      const order = state.jobs.filter(j=>j.date===date && j.tech===tech).length+1;
+      state.jobs.push({ id:uid('JOB'), leadId, date, window:windowT, tech, type, status:'Scheduled', community:l.community, address:l.org, zone:l.zone, driveMin:15, order, notes:l.notes||'' });
+      save(state); view='dispatch'; showToast('Work order booked');
+    };
+    window.signProposal = (id)=>{
+      const p = state.proposals.find(x=>x.id===id); if(!p) return;
+      if(p.approval==='Pending'){ showToast('Commercial bid stays unsigned until someone approves it'); return; }
+      p.signed = true; p.status = 'Signed';
+      const l = leadBy(p.leadId); if(l){ l.stage='Won'; if(/monitor/i.test(p.title+p.package)) l.contract='Monitoring'; }
+      state.agreements.unshift({ id:uid('AGR'), leadId:p.leadId, title:p.title, freq:'As scoped', next:selectedDay, value:p.subtotal, status:'Active', includes:p.package });
+      save(state); showToast(id+' signed — agreement opened');
+    };
+    window.approveProposal = (id)=>{
+      const p = state.proposals.find(x=>x.id===id); if(!p) return;
+      p.approval = 'Approved';
+      const l = leadBy(p.leadId); if(l) l.approval = 'Approved';
+      save(state); showToast(id+' approved — e-sign is now allowed');
+    };
+    window.payInvoice = (id)=>{
+      const inv = state.invoices.find(x=>x.id===id); if(!inv) return;
+      if(inv.status==='Draft' || !inv.issued){ showToast('Issue the draft first. GST stays a tax line, not revenue until paid.'); return; }
+      const method = prompt('How it landed (E-transfer / PO). Do not book a processor net as revenue.', inv.method&&inv.method!=='Send link'?inv.method:'E-transfer');
+      if(!method) return;
+      inv.method = method;
+      inv.status = 'Paid';
+      inv.paidOn = new Date().toISOString().slice(0,10);
+      save(state); render();
+    };
+    window.issueInvoice = (id)=>{
+      const inv = state.invoices.find(x=>x.id===id); if(!inv) return;
+      inv.issued = true;
+      inv.status = (inv.due && inv.due < selectedDay) ? 'Overdue' : 'Due';
+      if(!inv.due) inv.due = addDaysISO(inv.date, 14);
+      save(state); showToast(inv.id+' issued · due '+inv.due);
+    };
+    window.sendTemplate = async (leadId, tid)=>{
+      const l = leadBy(leadId); const t = COMM_TEMPLATES.find(x=>x.id===tid);
+      const job = (state.jobs||[]).find(j=>j.leadId===leadId) || {};
+      let body = t.body
+        .replace('{name}', l?.name||'')
+        .replace('{org}', l?.org||'')
+        .replace('{date}', job.date||selectedDay)
+        .replace('{window}', job.window||'')
+        .replace('{site}', job.address||l?.community||'')
+        .replace('{tech}', (techBy(job.tech)||{}).name||'Framework')
+        .replace('{id}','INV')
+        .replace('{total}', money(l?.value||0));
+      const to = t.channel==='Email' ? (l?.email||'') : (l?.phone||'');
+      const row = { id:uid('C'), leadId, channel:t.channel, template:tid, date:selectedDay, status:'Handed to phone', preview:body.slice(0,140), to };
+      state.comms.unshift(row);
+      save(state);
+      let href = t.channel==='Email'
+        ? 'mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(t.name)+'&body='+encodeURIComponent(body)
+        : 'sms:'+digits(to)+'?&body='+encodeURIComponent(body);
+      try {
+        const res = await fetch('/api/send', { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ channel:t.channel, to, body, subject:t.name, leadId }) });
+        if(res.ok){ const data = await res.json(); if(data.href) href = data.href; }
+      } catch(e) {}
+      showToast(t.channel+' opened on this phone. Tap send.');
+      location.href = href;
+    };
+    window.requestPay = (id)=>{
+      const inv = state.invoices.find(x=>x.id===id); if(!inv) return;
+      const l = leadBy(inv.leadId)||{};
+      const total = money((inv.subtotal||0) + (inv.gst||0));
+      const body = 'Framework Pest: '+inv.id+' for '+(l.org||'the site')+' is '+total+'. E-transfer info@frameworkpest.ca and use '+inv.id+' as the message.';
+      const t = { id:'etransfer', channel: l.phone ? 'SMS' : 'Email', name:'E-transfer request', body };
+      COMM_TEMPLATES.push(t);
+      sendTemplate(inv.leadId, 'etransfer');
+    };
+    window.logUsage = ()=>{
+      const jobId = prompt('Job id', (state.jobs[0]||{}).id); if(!jobId) return;
+      const product = prompt('Product id from catalog (EX-MESH, EX-SEAL, CHEM-HOLD…)', 'EX-MESH');
+      const qty = prompt('Quantity used','1')||'1';
+      const area = prompt('Area treated / sealed','')||'';
+      const pest = prompt('Target pest','')||'';
+      const weather = prompt('Weather','')||'';
+      const cat = CHEMS.find(c=>c.id===product) || { name:product, pcp:'Confirm on container', note:'' };
+      state.usages.unshift({ id:uid('U'), jobId, date:selectedDay, product, qty, area, pest, weather, tech:jobBy(jobId)?.tech||'T1', pcp:cat.pcp, note:cat.note });
+      save(state); view='chem'; showToast('Use logged. Label still governs.');
+    };
+    window.checkDevice = (id)=>{
+      const d = state.devices.find(x=>x.id===id); if(!d) return;
+      d.last = selectedDay; d.result = prompt('Result', d.result)||d.result;
+      save(state); render();
+    };
+    window.adjustStock = (sku, delta)=>{
+      const it = state.inventory.find(x=>x.sku===sku); if(!it) return;
+      it.onhand = Math.max(0, (it.onhand||0)+delta); save(state); render();
+    };
+    window.clockOut = (id)=>{
+      const p = state.punches.find(x=>x.id===id); if(!p) return;
+      p.end = new Date().toTimeString().slice(0,5); save(state); render();
+    };
+    window.holdAgreement = (id)=>{
+      const a = state.agreements.find(x=>x.id===id); if(!a) return;
+      a.status = a.status==='Held' ? 'Active' : 'Held';
+      save(state); render();
+    };
+    window.planInvoice = (id)=>{
+      const inv = state.invoices.find(x=>x.id===id); if(!inv) return;
+      inv.plan = prompt('Plan (e.g. 3 × monthly)', inv.plan||'3 × monthly')||inv.plan;
+      inv.method = 'Payment plan';
+      save(state); showToast('Plan noted — processor not live');
+    };
+    window.askReview = (id)=>{
+      const r = state.reviews.find(x=>x.id===id);
+      if(r) r.status = 'Asked';
+      const leadId = r?r.leadId:id;
+      sendTemplate(leadId, 'review');
+      view='reviews';
+    };
+    window.addPhotoNote = (jobId)=>{
+      const cap = prompt('Photo caption (file stays on the phone until upload exists)','');
+      if(!cap) return;
+      state.photos.unshift({ id:uid('PH'), jobId, caption:cap, slot:prompt('Slot','After')||'After' });
+      save(state); render();
+    };
+    window.signJob = (jobId)=>{
+      const j = jobBy(jobId); if(!j) return;
+      j.signature = prompt('Occupant name for sign-off', leadBy(j.leadId)?.name||'')||'Signed';
+      save(state); showToast('Sign-off stored on '+jobId);
+    };
+    window.bookFromSku = (sku)=>{
+      const svc = SERVICES.find(s=>s.id===sku); if(!svc) return;
+      const leadId = prompt('Lead id', state.leads[0].id); if(!leadId) return;
+      const l = leadBy(leadId); if(!l) return showToast('Unknown lead');
+      const date = prompt('Date YYYY-MM-DD', selectedDay)||selectedDay;
+      const tech = (bestFit(l.zone, svc.skill, date)[0]||{}).id || 'T1';
+      const order = state.jobs.filter(j=>j.date===date && j.tech===tech).length+1;
+      state.jobs.push({ id:uid('JOB'), leadId, date, window:svc.minutes+' min', tech, type:svc.name, svc:svc.id, status:'Scheduled', community:l.community, address:l.org, zone:l.zone, driveMin:14, order, notes:svc.note });
+      save(state); view='dispatch'; showToast(svc.name+' booked onto '+(techBy(tech)||{}).name);
+    };
+    window.acceptBooking = (id)=>{
+      const b = state.bookings.find(x=>x.id===id); if(!b) return;
+      b.status = 'Accepted';
+      const dup = findDup(b);
+      if(dup){ b.status='Already on file'; b.leadId=dup.id; save(state); view='lead'; selectedLead=dup.id; showToast('Book link matched '+dup.id); return; }
+      const lead = shapeLead({ name:b.name, org:b.name+' household', phone:b.phone, email:b.email, community:b.community, zone:b.zone||'SW', type:'Residential detached', pest:b.pest, evidence:b.note, notes:b.window, source:'Book link', pay:b.pay, next:'Confirm '+b.window, value:285, street:b.street||'' });
+      state.leads.unshift(lead);
+      enrollDrip(lead.id, 'newlead');
+      save(state); view='crm'; showToast('Booking became a lead — SLA running');
+    };
+    function minutesOpen(p){
+      if(!p.start) return 0;
+      const [sh,sm] = p.start.split(':').map(Number);
+      const end = p.end || new Date().toTimeString().slice(0,5);
+      const [eh,em] = end.split(':').map(Number);
+      return Math.max(0, (eh*60+em)-(sh*60+sm));
+    }
+    function bestFit(zone, skill, date){
+      return TECHS.map(t=>{
+        const stops = (state.jobs||[]).filter(j=>j.date===date && j.tech===t.id && !['Cancelled','Complete'].includes(j.status));
+        const same = stops.filter(j=>j.zone===zone).length;
+        const skillHit = (t.tags||[]).includes(skill)?30:0;
+        const load = Math.max(0, 40 - stops.length*12);
+        const score = skillHit + load + same*18;
+        return { ...t, score, stops:stops.length, same, reason:(skillHit?'skill ':'')+(same?'same-zone ':'')+(load>20?'open ':'busy') };
+      }).sort((a,b)=>b.score-a.score);
+    }
+    window.runFit = ()=>{
+      const zone = document.getElementById('fit-zone')?.value || 'SW';
+      const skill = document.getElementById('fit-skill')?.value || 'inspect';
+      const date = document.getElementById('fit-date')?.value || selectedDay;
+      window._fit = { zone, skill, date, rows: bestFit(zone, skill, date) };
+      render();
+    };
+    const LARK_API = 'http://127.0.0.1:8787';
+    window.pushLark = async (jobId, kind)=>{
+      const j = jobBy(jobId); if(!j) return showToast('No job');
+      const title = (kind==='approval'?'Approval · ':'Lark · ') + j.type;
+      const local = { id:uid('LK'), kind, jobId, sent:false, wired:false, reason:'queued', at:new Date().toISOString(), title };
+      state.lark = state.lark || [];
+      state.lark.unshift(local);
+      save(state);
+      try {
+        const path = kind==='approval' ? '/lark/approval' : '/lark/notify';
+        const res = await fetch(LARK_API + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ jobId, kind, job:j, title }) });
+        const body = await res.json();
+        local.wired = Boolean(body.wired);
+        local.sent = Boolean(body.sent);
+        local.reason = body.reason || (body.sent?'ok':'api-'+res.status);
+        save(state);
+        showToast(body.sent ? 'Lark accepted the card' : (body.wired ? 'Lark wired but chat/approval still incomplete' : 'Queued — API up, no Lark keys'));
+      } catch(e) {
+        local.reason = 'api-offline';
+        save(state);
+        showToast('Queued in OS. Start framework-ops on :8787 to talk to Lark.');
+      }
+    };
+    window.probeLark = async ()=>{
+      try {
+        const res = await fetch(LARK_API + '/lark/status');
+        const body = await res.json();
+        state.larkCfg = state.larkCfg || {};
+        state.larkCfg.wired = !!(body.pipe && body.pipe.wired);
+        state.larkCfg.endpoint = (body.pipe && body.pipe.endpoint) || state.larkCfg.endpoint;
+        state.larkCfg.chat = body.pipe && body.pipe.chatConfigured ? 'configured' : 'missing LARK_DISPATCH_CHAT';
+        save(state); render();
+        showToast(state.larkCfg.wired ? 'Lark credentials present on API' : 'API up. Lark still unwired.');
+      } catch(e) { showToast('Ops API not running on 127.0.0.1:8787'); }
+    };
+
+    window.placeFit = (techId)=>{
+      const f = window._fit || { zone:'SW', skill:'inspect', date:selectedDay };
+      const leadId = prompt('Lead id', state.leads[0].id); if(!leadId) return;
+      const l = leadBy(leadId); if(!l) return;
+      const svc = SERVICES.find(s=>s.skill===f.skill) || SERVICES[0];
+      const order = state.jobs.filter(j=>j.date===f.date && j.tech===techId).length+1;
+      state.jobs.push({ id:uid('JOB'), leadId, date:f.date, window:svc.minutes+' min window', tech:techId, type:svc.name, svc:svc.id, status:'Scheduled', community:l.community, address:l.org, zone:l.zone||f.zone, driveMin:12, order, notes:'Best Fit slot' });
+      save(state); view='dispatch'; showToast('Slotted on '+(techBy(techId)||{}).name);
+    };
+
+    function viewDispatch(){
+      const days = ['2026-09-11','2026-09-12','2026-09-13'];
+      return shell(`
+        <div class="flex flex-wrap justify-between gap-3 mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">FieldRoutes-class board</div>
+            <h1 class="font-display text-4xl font-semibold">Dispatch</h1>
+            <p class="text-forest/70 text-sm mt-1">Assign by tech and window. Not live GPS — reorder stops, mark en route / on site.</p>
+          </div>
+          <button onclick="bookJob()" class="bg-forest text-offwhite px-4 py-2 rounded-full font-display">Book stop</button>
+        </div>
+        <div class="flex gap-2 mb-4">${days.map(d=>`<button onclick="setDay('${d}')" class="px-3 py-1.5 rounded-full text-sm ${selectedDay===d?'bg-forest text-white':'bg-white border border-forest/15'}">${d.slice(5)}</button>`).join('')}</div>
+        <div class="grid md:grid-cols-3 gap-3">
+          ${TECHS.map(t=>{
+            const stops = (state.jobs||[]).filter(j=>j.date===selectedDay && j.tech===t.id).sort((a,b)=>a.order-b.order);
+            const mins = stops.reduce((a,j)=>a+(j.driveMin||0),0);
+            return `<section class="bg-white rounded-2xl p-4 border border-forest/10">
+              <div class="font-display text-lg">${t.name}</div>
+              <div class="text-xs text-forest/50 mb-3">${t.skills} · ~${mins} min windshield</div>
+              ${stops.map(j=>{
+                const l = leadBy(j.leadId);
+                return `<div class="border border-forest/10 rounded-xl p-3 mb-2">
+                  <div class="flex justify-between gap-2"><span class="font-semibold text-sm">${j.window}</span>${statusChip(j.status)}</div>
+                  <div class="text-sm mt-1">${l?l.org:j.address}</div>
+                  <div class="text-[11px] text-forest/55">${j.type} · ${j.community} · stop ${j.order}</div>
+                  <div class="flex flex-wrap gap-1 mt-2">
+                    ${JOB_STAT.filter(s=>s!==j.status).slice(0,4).map(s=>`<button onclick="setJobStat('${j.id}','${s}')" class="text-[10px] px-2 py-0.5 rounded-full border border-forest/20">${s}</button>`).join('')}
+                  </div>
+                </div>`;
+              }).join('')||'<p class="text-sm text-forest/40">No stops.</p>'}
+            </section>`;
+          }).join('')}
+        </div>
+      `);
+    }
+
+    function viewRoute(){
+      return shell(`
+        <div class="flex flex-wrap justify-between gap-3 mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">RouteOp lite</div>
+            <h1 class="font-display text-4xl font-semibold">Routes</h1>
+            <p class="text-sm text-forest/70 mt-1">Cluster by Calgary zone. Real turn-by-turn lives in the maps app until a routing API is wired.</p>
+          </div>
+        </div>
+        <div class="flex gap-2 mb-4">${['2026-09-11','2026-09-12','2026-09-13'].map(d=>`<button onclick="setDay('${d}')" class="px-3 py-1.5 rounded-full text-sm ${selectedDay===d?'bg-forest text-white':'bg-white border'}">${d.slice(5)}</button>`).join('')}</div>
+        ${TECHS.map(t=>{
+          const stops = (state.jobs||[]).filter(j=>j.date===selectedDay && j.tech===t.id && j.status!=='Cancelled').sort((a,b)=>a.order-b.order);
+          return `<section class="bg-white rounded-2xl p-4 border border-forest/10 mb-3">
+            <div class="flex justify-between items-center mb-2">
+              <div class="font-display text-xl">${t.name}</div>
+              <button onclick="optimizeRoute('${t.id}','${selectedDay}')" class="text-xs bg-sage px-3 py-1 rounded-full">Cluster by zone</button>
+            </div>
+            ${stops.map((j,i)=>`
+              <div class="flex items-center gap-3 py-2 border-b border-forest/5">
+                <div class="w-8 h-8 rounded-full bg-forest text-white flex items-center justify-center font-display">${j.order}</div>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold">${j.community} · ${j.type}</div>
+                  <div class="text-[11px] text-forest/55">${j.window} · ${j.driveMin||'?'} min from previous · ${j.address}</div>
+                </div>
+                <button onclick="moveJob('${j.id}',-1)" class="text-xs border px-2 rounded">Up</button>
+                <button onclick="moveJob('${j.id}',1)" class="text-xs border px-2 rounded">Down</button>
+              </div>`).join('')||'<p class="text-sm text-forest/40">Empty route.</p>'}
+          </section>`;
+        }).join('')}
+      `);
+    }
+
+    function viewJobs(){
+      return shell(`
+        <div class="flex justify-between mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Work orders</div>
+            <h1 class="font-display text-4xl font-semibold">Jobs</h1>
+          </div>
+          <button onclick="bookJob()" class="bg-forest text-offwhite px-4 py-2 rounded-full font-display">New order</button>
+        </div>
+        <div class="space-y-2">
+          ${(state.jobs||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)+a.order-b.order).map(j=>{
+            const l = leadBy(j.leadId);
+            return `<div class="bg-white rounded-2xl p-4 border border-forest/10 flex flex-wrap justify-between gap-3">
+              <div>
+                <div class="text-xs text-forest/40">${j.id} · ${j.date} · ${(techBy(j.tech)||{}).name}</div>
+                <div class="font-display text-xl">${l?l.org:j.address}</div>
+                <div class="text-sm">${j.type} · ${j.window} · ${j.notes||''}</div>
+              </div>
+              <div class="text-right">
+                ${statusChip(j.status)}
+                <div class="mt-2 flex flex-wrap justify-end gap-1">
+                  ${['En route','On site','Complete','No-show'].filter(s=>s!==j.status).map(s=>`<button onclick="setJobStat('${j.id}','${s}')" class="text-[11px] border px-2 py-0.5 rounded-full">${s}</button>`).join('')}
+                  <button onclick="addPhotoNote('${j.id}')" class="text-[11px] border px-2 py-0.5 rounded-full">Photo note</button>
+                  <button onclick="signJob('${j.id}')" class="text-[11px] border px-2 py-0.5 rounded-full">${j.signature?'Signed':'Sign off'}</button>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <h2 class="font-display text-2xl mt-8 mb-3">Time punches</h2>
+        <p class="text-xs text-forest/50 mb-2">On site is a punch on the work order. It is not a map and not live GPS.</p>
+        ${(state.punches||[]).map(p=>`
+          <div class="text-sm flex justify-between bg-white border border-forest/10 rounded-xl px-4 py-2 mb-1">
+            <span>${(techBy(p.tech)||{}).name} · ${p.jobId} · ${p.start}${p.end?'–'+p.end:' · open'}</span>
+            ${p.end?'':`<button onclick="clockOut('${p.id}')" class="underline">Clock out</button>`}
+          </div>`).join('')}
+      `);
+    }
+
+    function viewAgreements(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Service agreements</div>
+        <h1 class="font-display text-4xl font-semibold mb-4">Recurring work</h1>
+        <p class="text-sm text-forest/70 mb-4">PestPac / GorillaDesk live on cadence. Framework stores the contract and next date — bulk generate a Q visit from here.</p>
+        ${(state.agreements||[]).map(a=>{
+          const l = leadBy(a.leadId);
+          return `<div class="bg-white rounded-2xl p-5 border border-forest/10 mb-3 flex flex-wrap justify-between gap-3">
+            <div>
+              <div class="text-xs">${a.id} · ${statusChip(a.status)}</div>
+              <div class="font-display text-xl">${a.title}</div>
+              <div class="text-sm">${l?l.org:a.leadId} · ${a.freq} · next ${a.next}</div>
+              <div class="text-xs text-forest/55 mt-1">${a.includes}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-display text-2xl">${money(a.value)}</div>
+              <button onclick="(function(){ const l=leadBy('${a.leadId}'); state.jobs.push({id:uid('JOB'),leadId:'${a.leadId}',date:selectedDay,window:'Anytime',tech:'T1',type:'Contract visit',status:'Scheduled',community:l.community,address:l.org,zone:l.zone,driveMin:16,order:9,notes:'From ${a.id}'}); save(state); view='dispatch'; showToast('Visit spawned'); })()" class="mt-2 text-xs bg-forest text-white px-3 py-1 rounded-full">Spawn visit</button>
+              <button onclick="holdAgreement('${a.id}')" class="mt-2 text-xs border px-3 py-1 rounded-full">${a.status==='Held'?'Release hold':'Seasonal hold'}</button>
+            </div>
+          </div>`;
+        }).join('')}
+      `);
+    }
+
+    function viewBilling(){
+      const due = (state.invoices||[]).filter(i=>i.status!=='Paid').reduce((a,i)=>a+i.total,0);
+      return shell(`
+        <div class="flex justify-between mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Jobber-class cash</div>
+            <h1 class="font-display text-4xl font-semibold">Invoices</h1>
+            <p class="text-sm text-forest/70">GST 5% is a tax, not a product line. New invoices stay Draft until you issue them. Mark paid only after the e-transfer or PO lands.</p>
+          </div>
+          <div class="font-display text-2xl">${money(due)} open</div>
+        </div>
+        ${(state.invoices||[]).map(inv=>{
+          const l = leadBy(inv.leadId);
+          return `<div class="bg-white rounded-2xl p-4 border border-forest/10 mb-2 flex flex-wrap justify-between gap-3">
+            <div>
+              <div class="text-xs">${inv.id} · issued ${inv.date} · due ${inv.due||'—'} · ${inv.method||'method open'} · ${inv.jobId||'manual'}</div>
+              <div class="font-display text-lg">${l?l.org:inv.leadId}</div>
+              <div class="text-sm">${money(inv.subtotal)} + GST ${money(inv.gst)} = ${money(inv.total)}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-display text-2xl">${money(inv.total)}</div>
+              ${statusChip(inv.status)}
+              <div class="mt-2 flex gap-2 justify-end">
+                ${inv.status==='Draft'?`<button onclick="issueInvoice('${inv.id}')" class="text-xs border px-3 py-1 rounded-full">Issue</button>`:`<button onclick="requestPay('${inv.id}')" class="text-xs border px-3 py-1 rounded-full">Request e-transfer</button>`}
+                ${inv.status!=='Paid'&&inv.status!=='Draft'?`<button onclick="payInvoice('${inv.id}')" class="text-xs bg-forest text-white px-3 py-1 rounded-full">Mark paid</button>`:''}
+                <button onclick="planInvoice('${inv.id}')" class="text-xs border px-3 py-1 rounded-full">${inv.plan||'Payment plan'}</button>
+                <button onclick="sendTemplate('${inv.leadId}','invoice')" class="text-xs border px-3 py-1 rounded-full">Queue invoice note</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      `);
+    }
+
+    function viewChem(){
+      return shell(`
+        <div class="flex justify-between mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Alberta use record</div>
+            <h1 class="font-display text-4xl font-semibold">Materials</h1>
+            <p class="text-sm text-forest/70 max-w-2xl">GorillaDesk / PestPac log FIFRA fields. Framework logs what was used, where, weather, and PCP # from the container. Rates are not stored as shop defaults — the label is the rate.</p>
+          </div>
+          <button onclick="logUsage()" class="bg-forest text-offwhite px-4 py-2 rounded-full font-display">Log use</button>
+        </div>
+        <div class="grid md:grid-cols-2 gap-2 mb-6">
+          ${CHEMS.map(c=>`<div class="bg-white rounded-xl p-3 border border-forest/10 text-sm"><div class="font-display">${c.name}</div><div class="text-xs text-forest/55">${c.kind} · ${c.pcp}<br/>${c.note}</div></div>`).join('')}
+        </div>
+        <h2 class="font-display text-xl mb-2">Field log</h2>
+        ${(state.usages||[]).map(u=>{
+          const cat = CHEMS.find(c=>c.id===u.product);
+          return `<div class="bg-white rounded-xl p-4 border border-forest/10 mb-2 text-sm">
+            <div class="flex justify-between"><span class="font-display">${cat?cat.name:u.product}</span><span>${u.date} · ${u.qty}</span></div>
+            <div class="text-forest/70">${u.area} · ${u.pest} · ${u.weather}</div>
+            <div class="text-xs mt-1">${u.jobId} · PCP ${u.pcp} · ${u.note}</div>
+          </div>`;
+        }).join('')||'<p class="text-sm text-forest/50">Nothing logged.</p>'}
+      `);
+    }
+
+    function viewDevices(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Bait / monitor map</div>
+        <h1 class="font-display text-4xl font-semibold mb-4">Devices</h1>
+        <p class="text-sm text-forest/70 mb-4">Station IDs stay with the property so the next tech does not guess. Barcode hardware is future — names and last check are now.</p>
+        ${(state.devices||[]).map(d=>{
+          const l = leadBy(d.leadId);
+          return `<div class="bg-white rounded-2xl p-4 border border-forest/10 mb-2 flex flex-wrap justify-between gap-3">
+            <div>
+              <div class="text-xs">${d.id} · ${d.kind}</div>
+              <div class="font-display text-lg">${l?l.org:d.leadId}</div>
+              <div class="text-sm">${d.loc}</div>
+              <div class="text-xs text-forest/55">Last ${d.last} · ${d.result} · next ${d.next}</div>
+            </div>
+            <button onclick="checkDevice('${d.id}')" class="text-xs bg-forest text-white px-3 py-1 h-8 rounded-full">Log check</button>
+          </div>`;
+        }).join('')}
+      `);
+    }
+
+    function viewInventory(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Truck par</div>
+        <h1 class="font-display text-4xl font-semibold mb-4">Inventory</h1>
+        <p class="text-sm text-forest/70 mb-4">Par is on-truck. Spend lives on <button class="underline" onclick="go('suppliers')">Suppliers</button> — Veseris, Target, Nosis, Kin.</p>
+        ${(state.inventory||[]).map(it=>{
+          const low = it.onhand < it.par;
+          return `<div class="bg-white rounded-xl p-4 border border-forest/10 mb-2 flex justify-between items-center">
+            <div>
+              <div class="font-display">${it.name}</div>
+              <div class="text-xs text-forest/55">${it.sku} · ${it.season} · par ${it.par}</div>
+            </div>
+            <div class="flex items-center gap-3">
+              ${low?statusChip('Reorder'):''}
+              <button onclick="adjustStock('${it.sku}',-1)" class="border w-8 h-8 rounded-full">−</button>
+              <span class="font-display text-xl w-8 text-center">${it.onhand}</span>
+              <button onclick="adjustStock('${it.sku}',1)" class="border w-8 h-8 rounded-full">+</button>
+            </div>
+          </div>`;
+        }).join('')}
+      `);
+    }
+
+    function supplierBy(id){ return (state.suppliers||[]).find(s=>s.id===id); }
+    window.addPurchase = ()=>{
+      const supplierId = prompt('Supplier id (SUP-VES / SUP-TGT / SUP-NOS / SUP-KIN)','SUP-VES'); if(!supplierId||!supplierBy(supplierId)) return showToast('Unknown supplier');
+      const item = prompt('Item','Hardware cloth')||'Stock';
+      const sku = prompt('SKU if it hits par (MESH-6 / WEEP-B / SEAL-EXT / SNAP-CV / STAT-TR)','')||'';
+      const qty = Number(prompt('Qty','1')||1);
+      const subtotal = Number(prompt('Subtotal CAD before GST','0')||0);
+      const gst = Math.round(subtotal*GST*100)/100;
+      state.purchases.unshift({ id:uid('PO'), supplierId, date:selectedDay, sku, item, qty, subtotal, gst, total:Math.round((subtotal+gst)*100)/100, status:'Ordered', jobId:'' });
+      save(state); view='suppliers'; showToast('PO drafted — GST 5%');
+    };
+    window.receivePO = (id)=>{
+      const p = (state.purchases||[]).find(x=>x.id===id); if(!p) return;
+      p.status = 'Received';
+      const it = (state.inventory||[]).find(x=>x.sku===p.sku);
+      if(it) it.onhand += Number(p.qty||0);
+      save(state); showToast(it? p.sku+' +'+p.qty+' on truck':id+' received (no par SKU)');
+    };
+    window.payPO = (id)=>{
+      const p = (state.purchases||[]).find(x=>x.id===id); if(!p) return;
+      p.status = 'Paid'; save(state); showToast(id+' marked paid to supplier');
+    };
+
+    function viewSuppliers(){
+      const pos = state.purchases||[];
+      const spend = (sid)=> pos.filter(p=>p.supplierId===sid).reduce((a,p)=>a+Number(p.total||0),0);
+      const ytd = pos.reduce((a,p)=>a+Number(p.total||0),0);
+      return shell(`
+        <div class="flex flex-wrap justify-between gap-3 mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Purchasing</div>
+            <h1 class="font-display text-4xl font-semibold">Suppliers</h1>
+            <p class="text-sm text-forest/70 max-w-2xl">Veseris, Target Specialty, Nosis, and Kin. Track what left the account. Labelled product still needs the PCP from the carton when it hits the use log — this ledger is money, not a rate card.</p>
+          </div>
+          <button onclick="addPurchase()" class="bg-forest text-offwhite px-4 py-2 rounded-full font-display">New PO</button>
+        </div>
+        <div class="bg-white border border-forest/10 rounded-2xl p-4 mb-5 font-display text-2xl">YTD on this device ${money(ytd)} <span class="text-sm font-body text-forest/45">incl. GST</span></div>
+        <div class="grid md:grid-cols-2 gap-3 mb-8">
+          ${(state.suppliers||[]).map(s=>`
+            <article class="bg-white rounded-2xl p-4 border border-forest/10">
+              <div class="text-xs text-forest/40">${s.id} · ${s.kind}</div>
+              <div class="font-display text-2xl">${s.name}</div>
+              <div class="text-sm text-forest/60">${s.city} · ${s.pay}</div>
+              <div class="font-display text-xl mt-2">${money(spend(s.id))}</div>
+              <p class="text-xs text-forest/55 mt-2">${s.note}</p>
+            </article>`).join('')}
+        </div>
+        <h2 class="font-display text-xl mb-2">Purchase log</h2>
+        ${pos.map(p=>{
+          const s = supplierBy(p.supplierId);
+          return `<div class="bg-white rounded-xl p-3 border mb-2 flex flex-wrap justify-between gap-2 text-sm">
+            <div>
+              <div class="font-display">${p.id} · ${s?s.name:p.supplierId}</div>
+              <div class="text-xs text-forest/55">${p.date} · ${p.item} × ${p.qty} ${p.sku?'· '+p.sku:''}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-display">${money(p.total)}</div>
+              ${statusChip(p.status)}
+              ${p.status==='Ordered'?`<button onclick="receivePO('${p.id}')" class="block text-[11px] underline mt-1">Receive to truck</button>`:''}
+              ${p.status==='Received'?`<button onclick="payPO('${p.id}')" class="block text-[11px] underline mt-1">Mark paid</button>`:''}
+            </div>
+          </div>`;
+        }).join('')||'<p class="text-sm">No POs.</p>'}
+      `);
+    }
+
+    function dueChip(date){
+      if(!date) return '';
+      if(date < selectedDay) return statusChip('Overdue');
+      if(date <= '2026-10-15') return statusChip('Due soon');
+      return statusChip('Scheduled');
+    }
+    window.logMaint = ()=>{
+      const asset = prompt('Asset id (VAN-1 / EQ-SPR / EQ-LAD / EQ-THM / EQ-MST / EQ-PPE)','VAN-1'); if(!asset) return;
+      const kind = prompt('Work done','Oil')||'Service';
+      const cost = Number(prompt('Cost CAD incl tax','0')||0);
+      state.maint.unshift({ id:uid('M'), asset, date:selectedDay, kind, km:prompt('Km if van','')||'', cost, shop:prompt('Shop / in-house','In-house')||'In-house', status:'Done' });
+      const v = (state.vehicles||[]).find(x=>x.id===asset);
+      if(v && /oil/i.test(kind)) v.nextOil = prompt('Next oil date YYYY-MM-DD', v.nextOil)||v.nextOil;
+      save(state); view='fleet'; showToast('Maintenance logged');
+    };
+    window.bumpKm = ()=>{
+      const v = (state.vehicles||[])[0]; if(!v) return;
+      v.km = Number(prompt('Odometer km', String(v.km))||v.km);
+      save(state); render();
+    };
+
+    function viewFleet(){
+      const ytd = (state.maint||[]).reduce((a,m)=>a+Number(m.cost||0),0);
+      return shell(`
+        <div class="flex flex-wrap justify-between gap-3 mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Scheduled maintenance</div>
+            <h1 class="font-display text-4xl font-semibold">Fleet and kit</h1>
+            <p class="text-sm text-forest/70 max-w-2xl">Van + sprayer + ladder + meters. This is a due list, not GPS. Tag out a ladder before an eave nest. Winter tires before 1 Nov.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="bumpKm()" class="border px-4 py-2 rounded-full text-sm">Set km</button>
+            <button onclick="logMaint()" class="bg-forest text-offwhite px-4 py-2 rounded-full font-display">Log service</button>
+          </div>
+        </div>
+        <div class="font-display text-xl mb-4">Maint spend on file ${money(ytd)}</div>
+        ${(state.vehicles||[]).map(v=>`
+          <article class="bg-white rounded-2xl p-4 border border-forest/10 mb-3">
+            <div class="flex justify-between"><div class="font-display text-2xl">${v.name}</div><div class="text-sm">${v.km.toLocaleString('en-CA')} km</div></div>
+            <div class="text-xs text-forest/55">${v.id} · plate ${v.plate}</div>
+            <p class="text-sm mt-2">${v.note}</p>
+            <div class="grid sm:grid-cols-3 gap-2 mt-3 text-sm">
+              <div>Oil ${v.nextOil} ${dueChip(v.nextOil)}</div>
+              <div>Tires ${v.nextTires} ${dueChip(v.nextTires)}</div>
+              <div>Safety ${v.nextSafety} ${dueChip(v.nextSafety)}</div>
+            </div>
+          </article>`).join('')}
+        <h2 class="font-display text-xl mt-6 mb-2">Equipment</h2>
+        ${(state.equipment||[]).map(e=>`
+          <div class="bg-white rounded-xl p-3 border mb-2 flex flex-wrap justify-between gap-2 text-sm">
+            <div>
+              <div class="font-display text-lg">${e.name}</div>
+              <div class="text-xs text-forest/55">${e.id} · ${e.interval}</div>
+              <p class="text-xs mt-1">${e.note}</p>
+            </div>
+            <div class="text-right">Next ${e.next}<div class="mt-1">${dueChip(e.next)}</div></div>
+          </div>`).join('')}
+        <h2 class="font-display text-xl mt-6 mb-2">Service log</h2>
+        ${(state.maint||[]).map(m=>`
+          <div class="text-sm bg-white border rounded-xl p-3 mb-2 flex justify-between">
+            <div>${m.date} · ${m.asset} · ${m.kind}<div class="text-xs text-forest/55">${m.shop}${m.km?' · '+m.km+' km':''}</div></div>
+            <div>${money(m.cost)} ${statusChip(m.status)}</div>
+          </div>`).join('')}
+      `);
+    }
+
+    function viewComms(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Reminders · OMW · reviews</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Comms</h1>
+        <p class="text-sm text-forest/70 mb-4">A reminder opens Messages or Mail with the note filled in. You still tap send. The outbox is on the shared board, so the office can see it left this phone.</p>
+        <div class="grid md:grid-cols-2 gap-3 mb-6">
+          ${COMM_TEMPLATES.map(t=>`
+            <div class="bg-white rounded-2xl p-4 border border-forest/10">
+              <div class="text-xs text-forest/40">${t.channel}</div>
+              <div class="font-display text-lg">${t.name}</div>
+              <p class="text-xs text-forest/60 mt-1">${t.body}</p>
+              <div class="mt-2 flex flex-wrap gap-1">${state.leads.slice(0,4).map(l=>`<button onclick="sendTemplate('${l.id}','${t.id}')" class="text-[10px] border px-2 py-0.5 rounded-full">${l.org.split(' ')[0]}</button>`).join('')}</div>
+            </div>`).join('')}
+        </div>
+        <h2 class="font-display text-xl mb-2">Outbox</h2>
+        ${(state.comms||[]).map(c=>`
+          <div class="text-sm bg-white border border-forest/10 rounded-xl p-3 mb-2">
+            <div class="flex justify-between"><span>${c.channel} · ${c.template} · ${leadBy(c.leadId)?.org||''}</span>${statusChip(c.status)}</div>
+            <div class="text-forest/60 text-xs mt-1">${c.preview}</div>
+          </div>`).join('')}
+      `);
+    }
+
+    function viewTech(){
+      const tech = 'T1';
+      const stops = (state.jobs||[]).filter(j=>j.date===selectedDay && j.tech===tech).sort((a,b)=>a.order-b.order);
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Mobile day · ${techBy(tech).name}</div>
+        <h1 class="font-display text-4xl font-semibold mb-1">Tech board</h1>
+        <div class="flex gap-2 mb-4">${['2026-09-11','2026-09-12'].map(d=>`<button onclick="setDay('${d}')" class="px-3 py-1.5 rounded-full text-sm ${selectedDay===d?'bg-forest text-white':'bg-white border'}">${d.slice(5)}</button>`).join('')}</div>
+        ${stops.map(j=>{
+          const l = leadBy(j.leadId);
+          return `<article class="bg-white border border-forest/10 rounded-3xl p-5 mb-3">
+            <div class="flex justify-between"><span>${j.window}</span>${statusChip(j.status)}</div>
+            <h2 class="font-display text-2xl mt-1">${l?l.org:j.address}</h2>
+            <p class="text-sage text-sm">${j.address} · ${j.community}<br/>${j.type}<br/>${j.notes||l?.notes||''}</p>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <button onclick="setJobStat('${j.id}','En route')" class="bg-forest text-offwhite px-3 py-2 rounded-full text-sm">En route</button>
+              <button onclick="setJobStat('${j.id}','On site')" class="bg-white/10 px-3 py-2 rounded-full text-sm">On site</button>
+              <button onclick="setJobStat('${j.id}','Complete')" class="bg-white text-forest px-3 py-2 rounded-full text-sm">Complete + invoice</button>
+              <button onclick="sendTemplate('${j.leadId}','omw')" class="bg-white/10 px-3 py-2 rounded-full text-sm">OMW text</button>
+            </div>
+          </article>`;
+        }).join('')||'<p>No stops assigned to A. Mensah this day.</p>'}
+      `);
+    }
+
+    function viewPortal(){
+      const l = leadBy(portalLead) || state.leads[0];
+      const jobs = (state.jobs||[]).filter(j=>j.leadId===l.id);
+      const inv = (state.invoices||[]).filter(i=>i.leadId===l.id);
+      const agr = (state.agreements||[]).filter(a=>a.leadId===l.id);
+      return shell(`
+        <div class="flex justify-between mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">CustomerConnect lite</div>
+            <h1 class="font-display text-4xl font-semibold">Client hub</h1>
+          </div>
+          <select onchange="portalLead=this.value;render()" class="border rounded-full px-3 py-2 bg-white">
+            ${state.leads.map(x=>`<option value="${x.id}" ${x.id===l.id?'selected':''}>${x.org}</option>`).join('')}
+          </select>
+        </div>
+        <div class="bg-white border border-forest/10 rounded-3xl p-6 mb-4">
+          <div class="font-display text-3xl">${l.org}</div>
+          <p class="text-forest/55 mt-1">${l.name} · ${l.phone} · ${l.community}</p>
+          <p class="text-sm mt-3">${l.notes}</p>
+        </div>
+        <h2 class="font-display text-xl mb-2">Upcoming / recent visits</h2>
+        ${jobs.map(j=>`<div class="bg-white rounded-xl p-3 border mb-2 text-sm flex justify-between"><span>${j.date} ${j.window} · ${j.type}</span>${statusChip(j.status)}</div>`).join('')||'<p class="text-sm">None scheduled.</p>'}
+        <h2 class="font-display text-xl mt-6 mb-2">Agreements</h2>
+        ${agr.map(a=>`<div class="bg-white rounded-xl p-3 border mb-2 text-sm">${a.title} · ${a.freq} · next ${a.next}</div>`).join('')||'<p class="text-sm">No contract on file.</p>'}
+        <h2 class="font-display text-xl mt-6 mb-2">Invoices</h2>
+        ${inv.map(i=>`<div class="bg-white rounded-xl p-3 border mb-2 text-sm flex justify-between"><span>${i.id} · ${money(i.total)}</span>${statusChip(i.status)}</div>`).join('')||'<p class="text-sm">No invoices.</p>'}
+        <p class="text-xs text-forest/50 mt-6">Online booking and card-on-file are mocked. Occupant can request a window; office still confirms.</p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button onclick="bookJob()" class="bg-forest text-offwhite px-4 py-2 rounded-full">Request a visit</button>
+          <button onclick="copyBookLink()" class="border px-4 py-2 rounded-full text-sm">Copy public book link</button>
+        </div>
+        <h2 class="font-display text-xl mt-8 mb-2">Web booking queue</h2>
+        ${(state.bookings||[]).map(b=>`<div class="bg-white rounded-xl p-3 border mb-2 text-sm flex justify-between gap-2"><div>${b.name} · ${b.community} · ${b.pest}<br/><span class="text-xs text-forest/55">${b.window} · ${b.note}</span></div>${b.status==='New request'?`<button onclick="acceptBooking('${b.id}')" class="text-xs bg-forest text-white px-3 h-8 rounded-full">Accept to CRM</button>`:statusChip(b.status)}</div>`).join('')}
+      `);
+    }
+
+    function viewBook(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">YYC placeholder card · Olson process, local numbers</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Rate card</h1>
+        <p class="text-sm text-forest/70 max-w-3xl mb-2">CAD before GST. Mid-band is what the OS bills when you complete a job. Low–high is the quote range. Owner overwrite lives in Framework-Ops-Intake.xlsx sheet 04 and artifacts/Framework-YYC-Pricing-Model.md. Do not publish this sheet on the website.</p>
+        <p class="text-sm text-forest/70 max-w-3xl mb-6">Spray is a paid lap — minimum ticket $189. Termites are not a Calgary service. Label is law; no PCP or rate on the quote.</p>
+        ${RATE_SECTIONS.map(sec=>`
+          <section class="mb-8">
+            <div class="flex items-end justify-between gap-3 mb-3">
+              <div>
+                <h2 class="font-display text-2xl">${sec.title}</h2>
+                <p class="text-xs text-forest/60 max-w-2xl">${sec.blurb}</p>
+              </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-3">
+              ${sec.items.map(s=>`
+                <div class="bg-white rounded-2xl p-4 border border-forest/10">
+                  <div class="text-xs text-forest/40">${s.id} · ${s.window} · ${s.skill}</div>
+                  <div class="font-display text-xl">${s.name}</div>
+                  <div class="font-display text-2xl mt-1">${money(s.price)} <span class="text-sm font-body text-forest/50">mid</span></div>
+                  <div class="text-xs text-forest/55">${s.hi? money(s.lo)+' – '+money(s.hi)+' band + GST':'Fixed placeholder + GST'}</div>
+                  <p class="text-xs text-forest/60 mt-2">${s.note}</p>
+                  <button onclick="bookFromSku('${s.id}')" class="mt-3 text-xs bg-forest text-white px-3 py-1 rounded-full">Book mid-band</button>
+                </div>`).join('')}
+            </div>
+          </section>`).join('')}
+        <p class="text-xs text-forest/45">Source talk: Jonas Olson / Pest Badger process, rebuilt for a 115-day outdoor season, Chinooks, GST, and billed spray. Not a live rate card until Deolu overwrites the intake sheet.</p>
+      `);
+    }
+
+    function viewFit(){
+      const f = window._fit || { zone:'SW', skill:'inspect', date:selectedDay, rows:bestFit('SW','inspect',selectedDay) };
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">PestPac Best Fit lite</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Find a time</h1>
+        <p class="text-sm text-forest/70 mb-4">Scores skill, same-zone density, and open load. Not live traffic.</p>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <select id="fit-zone" class="border rounded-full px-3 py-2 bg-white">${TERRITORIES.map(t=>`<option ${t.id===f.zone?'selected':''} value="${t.id}">${t.id}</option>`).join('')}</select>
+          <select id="fit-skill" class="border rounded-full px-3 py-2 bg-white">${['inspect','spray','exclusion','rodent','commercial','bedbug','food'].map(s=>`<option ${s===f.skill?'selected':''}>${s}</option>`).join('')}</select>
+          <input id="fit-date" type="date" value="${f.date}" class="border rounded-full px-3 py-2 bg-white"/>
+          <button onclick="runFit()" class="bg-forest text-offwhite px-4 py-2 rounded-full">Score techs</button>
+        </div>
+        ${f.rows.map(r=>`
+          <div class="bg-white rounded-2xl p-4 border border-forest/10 mb-2 flex justify-between items-center">
+            <div>
+              <div class="font-display text-lg">${r.name} · score ${r.score}</div>
+              <div class="text-xs text-forest/55">${r.skills} · ${r.stops} stops already · ${r.same} in-zone · ${r.reason}</div>
+            </div>
+            <button onclick="placeFit('${r.id}')" class="text-xs bg-forest text-white px-3 py-1 rounded-full">Slot here</button>
+          </div>`).join('')}
+      `);
+    }
+
+    function viewCost(){
+      const rows = (state.jobs||[]).map(j=>{
+        const inv = (state.invoices||[]).find(i=>i.jobId===j.id);
+        const labour = (state.punches||[]).filter(p=>p.jobId===j.id).reduce((a,p)=>a+minutesOpen(p),0);
+        const labourCost = Math.round((labour/60)*55);
+        const mat = (state.usages||[]).filter(u=>u.jobId===j.id).length * 18;
+        const rev = inv?inv.subtotal:0;
+        return { j, inv, labour, labourCost, mat, rev, margin: rev-(labourCost+mat) };
+      });
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Jobber costing lite</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Job cost</h1>
+        <p class="text-sm text-forest/70 mb-4">Labour assumed $55/hr shop burden until payroll is wired. Materials counted as kit draws, not pesticide rates.</p>
+        ${rows.map(r=>`
+          <div class="bg-white rounded-2xl p-4 border border-forest/10 mb-2 grid md:grid-cols-5 gap-2 text-sm">
+            <div><div class="text-xs text-forest/50">${r.j.id}</div><div class="font-display">${r.j.type}</div></div>
+            <div>Labour ${r.labour} min<br/>${money(r.labourCost)}</div>
+            <div>Kit draws ${money(r.mat)}</div>
+            <div>Revenue ${money(r.rev)}</div>
+            <div class="font-display ${r.margin<0?'text-safety':''}">${money(r.margin)}</div>
+          </div>`).join('')}
+      `);
+    }
+
+    function viewReviews(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Review engine</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Reviews</h1>
+        <p class="text-sm text-forest/70 mb-4">Jobber / GorillaDesk ask after close. We queue the ask. Google post is still on the shop listing.</p>
+        ${(state.reviews||[]).map(r=>{
+          const l = leadBy(r.leadId);
+          return `<div class="bg-white rounded-2xl p-4 border mb-2 flex justify-between gap-3">
+            <div><div class="font-display">${l?l.org:r.leadId}</div><div class="text-xs">${r.asked} · ${r.note||''}</div></div>
+            <div>${statusChip(r.status)} ${r.status!=='Asked'?`<button onclick="askReview('${r.id}')" class="ml-2 text-xs bg-forest text-offwhite px-3 py-1 rounded-full">Ask</button>`:''}</div>
+          </div>`;
+        }).join('')||'<p class="text-sm">Complete a job to prime an ask.</p>'}
+      `);
+    }
+
+    function viewCompliance(){
+      return shell(`
+        <div class="flex justify-between mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Use report</div>
+            <h1 class="font-display text-4xl font-semibold">Compliance log</h1>
+            <p class="text-sm text-forest/70 max-w-2xl">PestPac / GorillaDesk export FIFRA sheets. Framework lists date, site, product, PCP from the container, qty, area, pest, weather, tech. Print this page. Rates are not invented.</p>
+          </div>
+          <button onclick="window.print()" class="no-print border px-4 py-2 rounded-full">Print</button>
+        </div>
+        <table class="w-full text-sm bg-white rounded-2xl overflow-hidden">
+          <thead class="bg-forest text-offwhite text-left"><tr><th class="p-2">Date</th><th>Job</th><th>Product</th><th>PCP</th><th>Qty</th><th>Area</th><th>Pest</th><th>Weather</th><th>Tech</th></tr></thead>
+          <tbody>
+            ${(state.usages||[]).map(u=>{
+              const cat = CHEMS.find(c=>c.id===u.product);
+              return `<tr class="border-t border-forest/10"><td class="p-2">${u.date}</td><td>${u.jobId}</td><td>${cat?cat.name:u.product}</td><td>${u.pcp}</td><td>${u.qty}</td><td>${u.area}</td><td>${u.pest}</td><td>${u.weather}</td><td>${(techBy(u.tech)||{}).name||u.tech}</td></tr>`;
+            }).join('')||'<tr><td class="p-3" colspan="9">No applications logged.</td></tr>'}
+          </tbody>
+        </table>
+      `);
+    }
+
+    function viewLark(){
+      const cfg = state.larkCfg || {};
+      return shell(`
+        <div class="flex flex-wrap justify-between gap-3 mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Office layer</div>
+            <h1 class="font-display text-4xl font-semibold">Lark pipe</h1>
+            <p class="text-sm text-forest/70 max-w-2xl mt-1">Framework stays source of truth. Lark gets a card, a calendar hold, or an approval request. Nothing is marked sent unless the ops API reports Lark accepted it.</p>
+          </div>
+          <button onclick="probeLark()" class="bg-forest text-white px-4 py-2 rounded-full font-display">Probe API</button>
+        </div>
+        <div class="grid md:grid-cols-3 gap-3 mb-6">
+          <div class="bg-white rounded-2xl p-4 border border-forest/10"><div class="text-xs uppercase tracking-widest text-forest/40">Endpoint</div><div class="font-display mt-1">${cfg.endpoint||'https://open.larksuite.com'}</div></div>
+          <div class="bg-white rounded-2xl p-4 border border-forest/10"><div class="text-xs uppercase tracking-widest text-forest/40">Credentials</div><div class="font-display mt-1">${cfg.wired?'Wired':'Not in env'}</div></div>
+          <div class="bg-white rounded-2xl p-4 border border-forest/10"><div class="text-xs uppercase tracking-widest text-forest/40">Dispatch chat</div><div class="font-display mt-1">${cfg.chat||'#dispatch — set LARK_DISPATCH_CHAT'}</div></div>
+        </div>
+        <h2 class="font-display text-xl mb-2">Push a live job</h2>
+        ${(state.jobs||[]).slice(0,6).map(j=>`
+          <div class="bg-white rounded-xl p-3 border border-forest/10 mb-2 flex flex-wrap justify-between gap-2 text-sm">
+            <div><span class="font-display">${j.id}</span> · ${j.type} · ${j.community} · ${j.status}</div>
+            <div class="flex gap-1">
+              <button onclick="pushLark('${j.id}','status')" class="text-[11px] bg-forest text-white px-3 py-1 rounded-full">Card</button>
+              <button onclick="pushLark('${j.id}','scheduled')" class="text-[11px] border px-3 py-1 rounded-full">Calendar hold</button>
+              <button onclick="pushLark('${j.id}','approval')" class="text-[11px] border px-3 py-1 rounded-full">Ask approval</button>
+            </div>
+          </div>`).join('')}
+        <h2 class="font-display text-xl mt-6 mb-2">Outbox</h2>
+        ${(state.lark||[]).map(e=>`
+          <div class="text-sm bg-white border border-forest/10 rounded-xl p-3 mb-2 flex justify-between gap-3">
+            <div>${e.at?.slice(0,16)||''} · ${e.kind} · ${e.jobId}<div class="text-xs text-forest/55">${e.title||''}</div></div>
+            <div>${e.sent?statusChip('Paid').replace('Paid','Sent'):statusChip(e.reason||'Queued')}</div>
+          </div>`).join('')||'<p class="text-sm text-forest/50">Empty.</p>'}
+        <p class="text-xs text-forest/50 mt-6">Put LARK_APP_ID, LARK_APP_SECRET, LARK_DISPATCH_CHAT in framework-ops/.env. China tenant: LARK_ENDPOINT=https://open.feishu.cn</p>
+      `);
+    }
+
+    window.queueWorkspace = async (jobId, kind)=>{
+      const j = jobBy(jobId); if(!j) return showToast('No job');
+      const row = { id:uid('GW'), kind, jobId, sent:false, wired:false, reason:'queued', at:new Date().toISOString(), title:kind+' · '+(j.type||j.id) };
+      state.workspace = state.workspace || [];
+      state.workspace.unshift(row);
+      save(state);
+      try {
+        const res = await fetch(LARK_API + '/workspace/queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ jobId, kind, job:j }) });
+        const body = await res.json();
+        row.wired = Boolean(body.wired); row.reason = body.reason || row.reason; save(state);
+        showToast(body.wired ? 'Workspace OAuth present — consent still required' : 'Queued. Customer mail stays off Lark.');
+      } catch(e) { showToast('Queued in OS. Ops API offline.'); }
+    };
+
+    function viewWorkspace(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Customer layer · @frameworkpest.ca</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Google Workspace</h1>
+        <p class="text-sm text-forest/70 max-w-2xl mb-4">Identity, Gmail to the client, Drive for stills and signed scopes, Calendar on the tech phone. Lark does not send the quote. Framework still owns the job.</p>
+        <div class="grid md:grid-cols-2 gap-3 mb-6 text-sm">
+          <div class="bg-white rounded-2xl p-4 border"><div class="text-xs text-forest/40">Gmail</div>Quote, invoice, reminder, prep sheet from hello@frameworkpest.ca</div>
+          <div class="bg-white rounded-2xl p-4 border"><div class="text-xs text-forest/40">Calendar</div>Confirmed stop → tech calendar. Lark is the ping, not the schedule of record.</div>
+          <div class="bg-white rounded-2xl p-4 border"><div class="text-xs text-forest/40">Drive</div>Thermal, site stills, signed commercial PDF. OS stores the link.</div>
+          <div class="bg-white rounded-2xl p-4 border"><div class="text-xs text-forest/40">SSO</div>@frameworkpest.ca is the login. Suspend Workspace, they lose OS + Lark.</div>
+        </div>
+        ${(state.jobs||[]).slice(0,5).map(j=>`
+          <div class="bg-white rounded-xl p-3 border mb-2 flex flex-wrap justify-between gap-2 text-sm">
+            <div class="font-display">${j.id} · ${j.type}</div>
+            <div class="flex gap-1">
+              <button onclick="queueWorkspace('${j.id}','gmail')" class="text-[11px] bg-forest text-white px-3 py-1 rounded-full">Queue Gmail</button>
+              <button onclick="queueWorkspace('${j.id}','calendar')" class="text-[11px] border px-3 py-1 rounded-full">Calendar</button>
+              <button onclick="queueWorkspace('${j.id}','drive')" class="text-[11px] border px-3 py-1 rounded-full">Drive folder</button>
+            </div>
+          </div>`).join('')}
+        <h2 class="font-display text-xl mt-6 mb-2">Outbox</h2>
+        ${(state.workspace||[]).map(e=>`
+          <div class="text-sm bg-white border rounded-xl p-3 mb-2 flex justify-between"><div>${e.kind} · ${e.jobId}</div>${statusChip(e.reason||'Queued')}</div>`).join('')||'<p class="text-sm text-forest/50">Empty. Set GOOGLE_CLIENT_ID in framework-ops/.env after consent.</p>'}
+      `);
+    }
+
+    const PEST_ID = [
+      { pest:'House mouse', season:'Year-round; spike after Chinooks and first frost', vs:'Rats are uncommon in most YYC residential. Droppings ~6 mm, pointed snout.', next:'Envelope inspect + exclusion list. Do not lead with a foundation spray.' },
+      { pest:'Pavement / odorous ant', season:'May–Sep trails; indoor in winter if heat + food', vs:'Carpenter ants are larger, dump frass, want wet wood.', next:'Find the joint or moisture. Bait or residual only where the label allows.' },
+      { pest:'Carpenter ant', season:'Spring swarmers; forage all summer', vs:'Not termites. Alberta default: termites not established.', next:'Probe wet wood. Treatment without the moisture story fails.' },
+      { pest:'Baldfaced / aerial wasp', season:'Jun–Sep. Doorway = high urgency', vs:'Honey bees are fuzzy and pollen-loaded. Do not treat a hive as a pest nest.', next:'Accessible nest = labelled application. Void / allergy / eave = book service.' },
+      { pest:'Cluster / boxelder / lady beetle', season:'Aug–Oct sunny walls', vs:'Not a hygiene pest. They overwinter in soffits.', next:'Seal + wall treatment. Do not fog the living room.' },
+      { pest:'German cockroach', season:'Year-round indoor. Food sites.', vs:'Not a wood roach from firewood.', next:'Night inspect. Series + sanitation. Applicator cert if chemical used.' },
+      { pest:'Bed bug', season:'Year-round travel / multi-res', vs:'Flea dirt is pepper in pet beds. Bed bug casings at seams.', next:'Inspect + prep sheet + series. Never one retail spray as a cure.' },
+      { pest:'Mosquito / biting fly', season:'Jun–Aug only. Not a YYC year-round engine', vs:'Black flies after melt in some belt creeks.', next:'Lot barrier as a billed program. Check Code near ponds.' }
+    ];
+    const RETAIL_MAP = [
+      { pest:'Mice', sell:'Covered snaps first. Door sweep / mesh. Domestic bait only if labelled for the buyer.', book:'If they have droppings in food rooms, or cannot set traps safely — book SVC-MOUSE.' },
+      { pest:'Ants', sell:'Bait station matching sugar vs protein. Do not stack sprays on bait.', book:'Carpenter ants or wet wood — inspect, do not send a spray can.' },
+      { pest:'Wasps', sell:'Foaming nest aerosol for a reachable nest they can see.', book:'Eave / void / ground nest, ladder, or allergy — SVC-WASP or SVC-WASP-V.' },
+      { pest:'Spiders', sell:'Exclusion + labelled indoor/outdoor residual if they insist. Set expectations.', book:'Heavy eave webbing every May — sell A+ spray season, not a can a week.' },
+      { pest:'Bed bugs', sell:'Nothing as a cure. Interceptors maybe. No single aerosol miracle.', book:'Always book SVC-BB0 inspect.' },
+      { pest:'Pantry moths / beetles', sell:'Find and bin the source food. Then a labelled pantry product if needed.', book:'If they refuse to throw the rice out, product will fail — say so.' }
+    ];
+    const CELLS = [
+      { id:'ALT', name:'Altadore / Marda / South Calgary', season:'Heritage weeps + mice', target:30, note:'SW envelope work. Nine-arounds after JOB-401.' },
+      { id:'EV', name:'East Village / Beltline', season:'Multi-res + bed bug protocol', target:30, note:'Core. Property-manager touches count as law-of-100.' },
+      { id:'OKO', name:'Okotoks light industrial strip', season:'Mice + sparrow + Q monitor', target:20, note:'Do not open a second rural cell until this holds.' }
+    ];
+
+    window.setWarranty = (leadId, action)=>{
+      state.warranty = state.warranty || [];
+      const l = leadBy(leadId);
+      const lines = {
+        covered: 'We will return at no charge inside the written window. Same pest, same zone, prep was done.',
+        paid: 'This sits outside the sold scope (new pest, skipped exclusion, or the window closed). We can book a paid revisit.',
+        convert: 'Activity pattern fits a program, not another one-off. Quote PRG-B or PRG-A on the same call.',
+        refer: 'This is wildlife, another suite, or a structural repair we do not perform. We will write the handoff.',
+        good: 'The biology is fine. We were late or messy. Office make-good — then the review ask.'
+      };
+      state.warranty.unshift({ id:uid('W'), leadId, action, said: lines[action], at: new Date().toISOString(), org:l?l.org:leadId });
+      if(action==='good' || action==='covered'){
+        state.reviews.unshift({ id:uid('RV'), leadId, asked:selectedDay, status:'Hold 24–48h', note:'Do not ask same-hour as a surprise invoice.' });
+      }
+      save(state); view='warranty'; showToast('Desk call logged');
+    };
+
+    function viewID(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">yyc-pest-id</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">What is it, this week</h1>
+        <p class="text-sm text-forest/70 mb-4">11 Sep 2026 — first fall frost typically ~15 Sep. Mouse-proofing window. Wasps still active on warm afternoons. Termites are not a Calgary job.</p>
+        ${PEST_ID.map(p=>`
+          <article class="bg-white rounded-2xl p-4 border border-forest/10 mb-2">
+            <div class="font-display text-xl">${p.pest}</div>
+            <div class="text-xs text-forest/40 mt-1">${p.season}</div>
+            <p class="text-sm mt-2">${p.vs}</p>
+            <p class="text-sm text-forest/70">Next: ${p.next}</p>
+          </article>`).join('')}
+      `);
+    }
+
+    function viewBrief(){
+      const urgent = state.leads.filter(l=>l.urgency==='High');
+      const stops = (state.jobs||[]).filter(j=>j.date===selectedDay);
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">yyc-dispatch-intel</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Morning brief</h1>
+        <p class="text-sm text-forest/70 mb-4">11 Sep 2026 · America/Edmonton. First frost ~15 Sep. Pull live weather before the truck leaves — this card does not replace Environment Canada.</p>
+        <div class="bg-white border border-forest/10 rounded-3xl p-6 mb-4">
+          <div class="text-sage text-xs tracking-widest uppercase">Weather and access</div>
+          <p class="mt-2">Shoulder season. Ladder work only if wind is honest. Chinook melt still feeds rim-joist moisture in SW heritage stock.</p>
+          <div class="text-sage text-xs tracking-widest uppercase mt-4">Pest pressure today</div>
+          <p class="mt-2">Mice moving toward heat. Wasps on warm walls. Cluster flies starting on south elevations. No termite language on the board.</p>
+        </div>
+        <h2 class="font-display text-xl mb-2">Urgency queue</h2>
+        ${urgent.map(l=>`<div class="bg-white rounded-xl p-3 border mb-2 text-sm"><span class="text-forest/50">${l.urgency}</span> · ${l.org} · ${l.pest}</div>`).join('')}
+        <h2 class="font-display text-xl mt-4 mb-2">Stops on ${selectedDay}</h2>
+        ${stops.map(j=>`<div class="bg-white rounded-xl p-3 border mb-2 text-sm">${j.window} · ${j.type} · ${j.community} · ${(techBy(j.tech)||{}).name}</div>`).join('')||'<p class="text-sm">None.</p>'}
+        <h2 class="font-display text-xl mt-4 mb-2">3 moves before 09:00</h2>
+        <ol class="list-decimal ml-5 text-sm space-y-1">
+          <li>Confirm Altadore access with dispatch (do not write the gate code here) and the cat before the 08:30 inspect.</li>
+          <li>Do not add a free perimeter spray onto a mouse mobilization.</li>
+          <li>Stage weep guards + mesh — par is short on the SW heritage run.</li>
+        </ol>
+        <p class="text-xs text-forest/50 mt-4">Compliance nudge: food-site night inspect needs an applicator if a pesticide is used. Label is law.</p>
+      `);
+    }
+
+    function viewWarranty(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">yyc-warranty-desk</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Warranty desk</h1>
+        <p class="text-sm text-forest/70 mb-4">Covered activity is not a failed job. Do not ask for a Google review while a callback is open. Never argue science in public.</p>
+        ${(state.leads||[]).slice(0,6).map(l=>`
+          <div class="bg-white rounded-2xl p-4 border border-forest/10 mb-2">
+            <div class="font-display text-lg">${l.org}</div>
+            <div class="text-xs text-forest/55">${l.pest} · ${l.community} · ${l.stage}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              ${[['covered','Covered revisit'],['paid','Paid revisit'],['convert','Convert to program'],['refer','Refer / escalate'],['good','Office make-good']].map(([k,lab])=>`<button onclick="setWarranty('${l.id}','${k}')" class="text-[11px] border px-2 py-1 rounded-full">${lab}</button>`).join('')}
+            </div>
+          </div>`).join('')}
+        <h2 class="font-display text-xl mt-6 mb-2">Desk log</h2>
+        ${(state.warranty||[]).map(w=>`
+          <div class="text-sm bg-white border rounded-xl p-3 mb-2">
+            <div class="font-display">${w.org} · ${w.action}</div>
+            <p class="text-forest/70">${w.said}</p>
+          </div>`).join('')||'<p class="text-sm text-forest/50">No calls yet.</p>'}
+      `);
+    }
+
+    function viewDensity(){
+      const byComm = {};
+      (state.leads||[]).forEach(l=>{ byComm[l.community] = (byComm[l.community]||0)+1; });
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">yyc-density-growth</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Own the cell</h1>
+        <p class="text-sm text-forest/70 max-w-2xl mb-4">Value is a recurring program in a tight cell, not a truck on Deerfoot. Open a second cell only when the first holds ~30 active stops. No card / e-transfer / PO → not on the dispatch board.</p>
+        ${CELLS.map(c=>{
+          const have = Object.entries(byComm).filter(([n])=>c.name.includes(n.split(' ')[0]) || c.name.includes(n)).reduce((a,[,n])=>a+n,0) || (state.leads.filter(l=>c.name.includes(l.community)).length);
+          const n = state.leads.filter(l=>c.name.toLowerCase().includes(l.community.toLowerCase()) || l.community && c.name.includes(l.community)).length;
+          return `<div class="bg-white rounded-2xl p-4 border border-forest/10 mb-3">
+            <div class="flex justify-between"><div class="font-display text-xl">${c.name}</div><div class="font-display">${n} / ${c.target}</div></div>
+            <div class="text-xs text-forest/40">${c.season}</div>
+            <p class="text-sm mt-2">${c.note}</p>
+            <div class="h-2 bg-sage/30 rounded-full mt-3"><div class="h-2 bg-forest rounded-full" style="width:${Math.min(100, Math.round(n/c.target*100))}%"></div></div>
+          </div>`;
+        }).join('')}
+        <h2 class="font-display text-xl mt-6 mb-2">Law of 100 — today mix</h2>
+        <ul class="text-sm space-y-1">
+          <li>20 nine-arounds from yesterday’s jobs</li>
+          <li>20 GBP / web / voicemail follow-ups</li>
+          <li>20 property-manager or HOA touches</li>
+          <li>20 review or referral asks (desk owns the 24–48h window)</li>
+          <li>20 retail or content touches aimed at the open cells</li>
+        </ul>
+        <p class="text-xs text-forest/50 mt-3">Winter shifts knocks to phone and last-fall rodent follow-up. Cut a channel that books no inspect in 14 days.</p>
+      `);
+    }
+
+    function viewRetail(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">yyc-retail-counter</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Walk-in counter</h1>
+        <p class="text-sm text-forest/70 mb-4">Solve it or book it. Do not sell a commercial/restricted product to an uncertified buyer. Do not mix jugs. Label is law.</p>
+        ${RETAIL_MAP.map(r=>`
+          <div class="bg-white rounded-2xl p-4 border border-forest/10 mb-2">
+            <div class="font-display text-xl">${r.pest}</div>
+            <p class="text-sm mt-1"><span class="font-semibold">Sell</span> — ${r.sell}</p>
+            <p class="text-sm"><span class="font-semibold">Book</span> — ${r.book}</p>
+          </div>`).join('')}
+      `);
+    }
+
+    function viewBid(){
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">yyc-commercial-bid</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Commercial shape</h1>
+        <p class="text-sm text-forest/70 mb-4">No pest-free promise on food sites. Survey credits to year-1 if they sign in 14 days. After-close applications +25–40%.</p>
+        <div class="grid md:grid-cols-2 gap-3">
+          ${SERVICES.filter(s=>s.skill==='commercial'||s.skill==='food'||s.id==='SVC-COM').map(s=>`
+            <div class="bg-white rounded-2xl p-4 border border-forest/10">
+              <div class="text-xs text-forest/40">${s.id}</div>
+              <div class="font-display text-xl">${s.name}</div>
+              <div class="font-display text-2xl">${money(s.price)} <span class="text-sm">mid + GST</span></div>
+              <p class="text-xs text-forest/60 mt-2">${s.note}</p>
+              <button onclick="bookFromSku('${s.id}')" class="mt-3 text-xs bg-forest text-white px-3 py-1 rounded-full">Put on the board</button>
+            </div>`).join('')}
+        </div>
+        <p class="text-xs text-forest/50 mt-4">Full RFP narrative still lives in the commercial-bid playbook. This screen only prices the first year shape.</p>
+      `);
+    }
+
+    function slaAge(l){
+      if(l.firstTouch) return Math.round((new Date(l.firstTouch)-new Date(l.created))/60000);
+      return Math.round((Date.now()-new Date(l.created||Date.now()))/60000);
+    }
+    window.logCall = ()=>{
+      const phone = prompt('Number','403-')||'';
+      const result = prompt('Answered / Missed / Abandoned','Missed')||'Missed';
+      const who = prompt('Who','Unknown')||'Unknown';
+      state.calls.unshift({ id:uid('CALL'), at:new Date().toISOString(), who, phone, result, minutes: result==='Answered'?Number(prompt('Talk minutes','5')||0):0, leadId:'', note:prompt('Note','')||'' });
+      save(state); view='phone'; showToast('Call logged — not a live PBX');
+    };
+    window.savePlay = (agrId)=>{
+      const a = state.agreements.find(x=>x.id===agrId); if(!a) return;
+      sendTemplate(a.leadId, 'remind');
+      a.status = a.status==='Held'?'Held':'Active';
+      a.next = selectedDay;
+      save(state); showToast('Retention play queued on '+a.id);
+    };
+    window.addReferral = ()=>{
+      const fromLead = prompt('From lead id', state.leads[0].id); if(!fromLead) return;
+      const toName = prompt('Who they sent','')||'Neighbour';
+      state.referrals.unshift({ id:uid('REF'), fromLead, toName, status:'Open', note:'Nine-around / Clicki-style. Credit when they book inspect.' });
+      const l = leadBy(fromLead); if(l && !l.referredBy) {/* source account */}
+      save(state); view='refer'; showToast('Referral logged');
+    };
+
+    function viewSpeed(){
+      const rows = (state.leads||[]).slice().sort((a,b)=>slaAge(b)-slaAge(a));
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Olson · speed-to-lead</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Fifteen minutes</h1>
+        <p class="text-sm text-forest/70 mb-4">In-season target: first human touch under 15 minutes. After-hours AI is a vendor. This board is the clock.</p>
+        ${rows.map(l=>{
+          const age = slaAge(l);
+          const hot = !l.firstTouch && age>15;
+          return `<div class="bg-white rounded-2xl p-4 border mb-2 flex flex-wrap justify-between gap-3 ${hot?'border-safety':''}">
+            <div>
+              <div class="font-display text-lg">${l.org}</div>
+              <div class="text-xs">${l.source||'—'} · ${l.stage} · ${l.phone}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-display text-2xl ${hot?'text-safety':''}">${l.firstTouch?age+' min':'OPEN '+age+'m'}</div>
+              ${l.firstTouch?'':`<button onclick="touchLead('${l.id}')" class="text-xs bg-forest text-offwhite px-3 py-1 rounded-full">Touch now</button>`}
+            </div>
+          </div>`;
+        }).join('')}
+      `);
+    }
+    function viewPhone(){
+      const calls = state.calls||[];
+      const miss = calls.filter(c=>c.result!=='Answered').length;
+      return shell(`
+        <div class="flex justify-between mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Olson · phone desk</div>
+            <h1 class="font-display text-4xl font-semibold">Calls</h1>
+            <p class="text-sm text-forest/70">Not Lawn Phone. Log what happened until a Canadian DID with recording exists. Missed inbound is a revenue leak.</p>
+          </div>
+          <button onclick="logCall()" class="bg-forest text-offwhite px-4 py-2 rounded-full font-display">Log a call</button>
+        </div>
+        <div class="font-display text-xl mb-3">${miss} missed or abandoned of ${calls.length}</div>
+        ${calls.map(c=>`
+          <div class="bg-white rounded-xl p-3 border mb-2 text-sm flex justify-between">
+            <div>${(c.at||'').replace('T',' ').slice(0,16)} · ${c.who} · ${c.phone}<div class="text-xs text-forest/55">${c.note||''}</div></div>
+            <div>${statusChip(c.result)} ${c.minutes?c.minutes+' min':''}</div>
+          </div>`).join('')||'<p class="text-sm">No calls logged.</p>'}
+      `);
+    }
+    function viewRefer(){
+      return shell(`
+        <div class="flex justify-between mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Olson · referrals</div>
+            <h1 class="font-display text-4xl font-semibold">Who sent whom</h1>
+            <p class="text-sm text-forest/70">Clicki is a contest engine. We log the nine-around and credit when they book. Cheaper than ads if the job was clean.</p>
+          </div>
+          <button onclick="addReferral()" class="bg-forest text-white px-4 py-2 rounded-full font-display">Add referral</button>
+        </div>
+        ${(state.referrals||[]).map(r=>{
+          const from = leadBy(r.fromLead);
+          return `<div class="bg-white rounded-2xl p-4 border mb-2 text-sm flex justify-between">
+            <div><div class="font-display text-lg">${from?from.org:r.fromLead} → ${r.toName}</div><div class="text-xs">${r.note}</div></div>
+            ${statusChip(r.status)}
+          </div>`;
+        }).join('')||'<p class="text-sm">None yet.</p>'}
+        <h2 class="font-display text-xl mt-6 mb-2">Accounts that already named a source</h2>
+        ${state.leads.filter(l=>l.referredBy||l.source==='Referral'||l.source==='Nine-around').map(l=>`
+          <div class="text-sm bg-white border rounded-xl p-3 mb-1">${l.org} · ${l.source} · ${l.referredBy||'—'}</div>`).join('')}
+      `);
+    }
+    function viewChurn(){
+      const rows = (state.agreements||[]).map(a=>{
+        const l = leadBy(a.leadId);
+        const reasons = [];
+        if(a.status==='Held') reasons.push('Seasonal hold');
+        if(l && !l.pay) reasons.push('No pay method');
+        if(a.next && a.next < selectedDay) reasons.push('Next date lapsed');
+        const lastJob = (state.jobs||[]).filter(j=>j.leadId===a.leadId).sort((x,y)=>y.date.localeCompare(x.date))[0];
+        if(!lastJob) reasons.push('No job on file');
+        return { a, l, reasons, risk: reasons.length };
+      }).filter(r=>r.risk);
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Olson · churn</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Keep the book</h1>
+        <p class="text-sm text-forest/70 mb-4">Small churn compounds on recurring routes. Fire a text/task here. A US churn SaaS is optional later — the list has to live in Framework first.</p>
+        ${rows.map(r=>`
+          <div class="bg-white rounded-2xl p-4 border border-forest/10 mb-2 flex flex-wrap justify-between gap-3">
+            <div>
+              <div class="font-display text-lg">${r.a.title}</div>
+              <div class="text-sm">${r.l?r.l.org:r.a.leadId} · next ${r.a.next}</div>
+              <div class="text-xs text-forest/40 mt-1">${r.reasons.join(' · ')}</div>
+            </div>
+            <button onclick="savePlay('${r.a.id}')" class="text-xs bg-forest text-white px-3 py-1 h-8 rounded-full">Queue save play</button>
+          </div>`).join('')||'<p class="text-sm">No at-risk agreements on this seed.</p>'}
+      `);
+    }
+
+    function enrollDrip(leadId, seq){
+      state.drips = state.drips || [];
+      const today = selectedDay || new Date().toISOString().slice(0,10);
+      const addDays = (n)=>{ const d=new Date(today+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+      const pack = {
+        newlead: [
+          { step:'Same-day touch', due:today, template:'remind', seq:'newlead' },
+          { step:'Day 2 quote follow', due:addDays(2), template:'quote2', seq:'quote' },
+          { step:'Day 5 close-or-book', due:addDays(5), template:'quote5', seq:'quote' }
+        ],
+        aftercare: [
+          { step:'48h aftercare', due:addDays(2), template:'aftercare', seq:'aftercare' },
+          { step:'Review ask (if no callback)', due:addDays(3), template:'review', seq:'review' }
+        ]
+      };
+      (pack[seq]||[]).forEach(s=>{
+        state.drips.unshift({ id:uid('DR'), leadId, seq:s.seq, step:s.step, due:s.due, status:'Due', template:s.template });
+      });
+    }
+    window.copyBookLink = ()=>{
+      const url = (location.href.split('#')[0].split('?')[0]) + '#book';
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url);
+      showToast('Book link copied: '+url);
+    };
+    window.submitPublicBook = (e)=>{
+      e.preventDefault();
+      const f = Object.fromEntries(new FormData(e.target).entries());
+      if(!f.pay || f.pay==='Call first'){ /* allowed */ }
+      if(!f.pay){ showToast('Pick how you will pay — e-transfer, card, or call first'); return false; }
+      const row = { id:uid('BK'), name:f.name, community:f.community, street:f.street||'', pest:f.pest, window:f.window, status:'New request', note:f.evidence||'', pay:f.pay, phone:f.phone, email:f.email||'', zone:f.zone };
+      state.bookings.unshift(row);
+      save(state);
+      document.getElementById('book-ok')?.classList.remove('hidden');
+      e.target.classList.add('hidden');
+      return false;
+    };
+
+    function viewBookLink(){
+      const url = (typeof location!=='undefined' ? location.href.split('#')[0].split('?')[0] : 'Framework-OS.html') + '#book';
+      return shell(`
+        <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Instead of Cal.com / Tally</div>
+        <h1 class="font-display text-4xl font-semibold mb-2">Book link</h1>
+        <p class="text-sm text-forest/70 max-w-2xl mb-4">Share this with a customer or paste it on frameworkpest.ca later. Same ticket as intake. Pay method required. Office still confirms the window — this is not live calendar.</p>
+        <div class="bg-white border border-forest/10 rounded-2xl p-5 mb-5">
+          <div class="text-xs uppercase tracking-widest text-sage">Public URL</div>
+          <div class="font-display text-lg break-all mt-1">${url}</div>
+          <button onclick="copyBookLink()" class="mt-3 bg-forest text-offwhite px-4 py-2 rounded-full text-sm">Copy link</button>
+          <button onclick="view='publicbook';render()" class="mt-3 ml-2 border border-sage px-4 py-2 rounded-full text-sm">Preview</button>
+        </div>
+        <h2 class="font-display text-xl mb-2">Queue</h2>
+        ${(state.bookings||[]).map(b=>`
+          <div class="bg-white rounded-xl p-3 border mb-2 text-sm flex flex-wrap justify-between gap-2">
+            <div>${b.name} · ${b.community} · ${b.pest}<div class="text-xs text-forest/55">${b.window} · ${b.pay||'no pay'} · ${b.phone||''}</div></div>
+            ${b.status==='New request'?`<button onclick="acceptBooking('${b.id}')" class="text-xs bg-forest text-white px-3 h-8 rounded-full">Accept to CRM</button>`:statusChip(b.status)}
+          </div>`).join('')||'<p class="text-sm">Empty.</p>'}
+        <p class="text-xs text-forest/50 mt-4">When ops.frameworkpest.com is live, the .ca contact form posts here. Until then this hash link is the shareable slot.</p>
+      `);
+    }
+
+    function viewPublicBook(){
+      return `<div class="min-h-screen bg-offwhite text-forest p-5 max-w-lg mx-auto">
+        <div class="flex items-center gap-2 mb-4">${logo(32)}<div><div class="font-display font-semibold">Framework Pest</div><div class="text-xs text-forest/40">Show us what you saw</div></div></div>
+        <h1 class="font-display text-3xl font-semibold">Book an inspect</h1>
+        <p class="text-sm text-forest/70 mt-1 mb-4">Calgary · Airdrie · Cochrane · Chestermere · Okotoks. We confirm the window. Not a live calendar.</p>
+        <form onsubmit="return submitPublicBook(event)" class="bg-white rounded-3xl p-5 border border-forest/10 grid gap-3">
+          ${field('name','Your name')}
+          ${field('phone','Phone')}
+          <label class="text-sm">Email<input name="email" type="email" class="mt-1 w-full border border-forest/15 rounded-xl px-3 py-2 bg-offwhite"/></label>
+          ${field('community','Community')}
+          <label class="text-sm">Street <span class="text-forest/40">(optional)</span>
+            <input name="street" class="mt-1 w-full border rounded-xl px-3 py-2 bg-offwhite"/>
+          </label>
+          <label class="text-sm">Zone
+            <select name="zone" class="mt-1 w-full border rounded-xl px-3 py-2 bg-offwhite">${TERRITORIES.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select>
+          </label>
+          <label class="text-sm">What is it
+            <select name="pest" class="mt-1 w-full border rounded-xl px-3 py-2 bg-offwhite">
+              <option>Mice</option><option>Wasps</option><option>Ants</option><option>Bed bugs</option><option>Not sure — send a photo later</option>
+            </select>
+          </label>
+          <label class="text-sm">What you saw
+            <textarea name="evidence" rows="3" required class="mt-1 w-full border rounded-xl px-3 py-2 bg-offwhite" placeholder="Droppings, nest, bites, where…"></textarea>
+          </label>
+          <label class="text-sm">Window
+            <select name="window" class="mt-1 w-full border rounded-xl px-3 py-2 bg-offwhite">
+              <option>Weekday morning</option><option>Weekday afternoon</option><option>Same-day / after hours</option>
+            </select>
+          </label>
+          <label class="text-sm">How you will pay
+            <select name="pay" required class="mt-1 w-full border rounded-xl px-3 py-2 bg-offwhite">
+              <option value="">Choose…</option>
+              <option>E-transfer</option>
+              <option>Card pending</option>
+              <option>Call first</option>
+            </select>
+          </label>
+          <button class="bg-forest text-offwhite rounded-full py-3 font-display font-semibold mt-1">Send to the shop</button>
+        </form>
+        <p id="book-ok" class="hidden mt-4 text-sm">Received. Framework will reach you from frameworkpest.ca. 825 747 5787 if it is at the door.</p>
+        <p class="text-xs text-forest/45 mt-6">Residential inspect mid-band ${money(159)} + GST until the shop overwrites the card. Credit to treatment if you book within 7 days.</p>
+      </div>`;
+    }
+
+    function viewFollow(){
+      const rows = (state.drips||[]).slice().sort((a,b)=> (a.due||'').localeCompare(b.due||''));
+      return shell(`
+        <div class="flex flex-wrap justify-between gap-3 mb-4">
+          <div>
+            <div class="text-forest/40 text-xs tracking-[0.2em] uppercase font-semibold">Instead of HubSpot</div>
+            <h1 class="font-display text-4xl font-semibold">Follow-up</h1>
+            <p class="text-sm text-forest/70 max-w-2xl">Day 2 and day 5 on open quotes. 48h aftercare then a review ask — warranty desk still blocks the ask if a callback is open.</p>
+          </div>
+        </div>
+        ${state.leads.slice(0,6).map(l=>`<button onclick="enrollDrip('${l.id}','newlead');save(state);render();showToast('Drip on ${l.org}')" class="text-[11px] border px-2 py-1 rounded-full mr-1 mb-2">Enroll ${l.org.split(' ')[0]}</button>`).join('')}
+        ${rows.map(d=>{
+          const l = leadBy(d.leadId);
+          return `<div class="bg-white rounded-xl p-3 border mb-2 flex flex-wrap justify-between gap-2 text-sm">
+            <div><div class="font-display">${l?l.org:d.leadId} · ${d.step}</div><div class="text-xs text-forest/55">due ${d.due} · ${d.seq}</div></div>
+            <div>${statusChip(d.status)} ${d.status==='Due'?`<button onclick="runDrip('${d.id}')" class="ml-2 text-xs bg-forest text-white px-3 py-1 rounded-full">Queue send</button>`:''}</div>
+          </div>`;
+        }).join('')||'<p class="text-sm">No drips. Enroll a lead above.</p>'}
+      `);
+    }
+    window.runDrip = (id)=>{
+      const d = (state.drips||[]).find(x=>x.id===id); if(!d) return;
+      const l = leadBy(d.leadId);
+      if(d.template==='review'){
+        const openCb = (state.reviews||[]).some(r=>r.leadId===d.leadId && r.status==='Hold');
+        // warranty hold: if warranty desk has open, skip — simple check notes
+        const held = (state.reviews||[]).find(r=>r.leadId===d.leadId && /hold|callback/i.test(r.note||''));
+        if(held){ showToast('Warranty hold — review ask blocked'); return; }
+      }
+      sendTemplate(d.leadId, d.template);
+      d.status = 'Sent';
+      save(state); showToast((l?l.org:'')+' · '+d.step+' queued');
+    };
+
+    function render(){
+      const map = {
+        dashboard: viewDashboard,
+        intake: viewIntake,
+        crm: viewCRM,
+        lead: viewLead,
+        guard: viewGuard,
+        sop: viewSOP,
+        inspection: viewInspection,
+        dispatch: viewDispatch,
+        route: viewRoute,
+        jobs: viewJobs,
+        agreements: viewAgreements,
+        billing: viewBilling,
+        chem: viewChem,
+        devices: viewDevices,
+        inventory: viewInventory,
+        suppliers: viewSuppliers,
+        fleet: viewFleet,
+        comms: viewComms,
+        tech: viewTech,
+        portal: viewPortal,
+        book: viewBook,
+        fit: viewFit,
+        cost: viewCost,
+        reviews: viewReviews,
+        compliance: viewCompliance,
+        lark: viewLark,
+        workspace: viewWorkspace,
+        id: viewID,
+        brief: viewBrief,
+        warranty: viewWarranty,
+        density: viewDensity,
+        retail: viewRetail,
+        bid: viewBid,
+        speed: viewSpeed,
+        phone: viewPhone,
+        refer: viewRefer,
+        booklink: viewBookLink,
+        follow: viewFollow,
+        publicbook: viewPublicBook,
+        churn: viewChurn,
+        territory: viewTerritory,
+        proposals: viewProposals,
+        report: viewReport
+      };
+      document.getElementById('app').innerHTML = (map[view]||viewDashboard)();
+    }
+    window.shopOut = ()=>{ fetch('/api/logout',{method:'POST',credentials:'same-origin'}).then(()=>{ shopSession=null; showLogin(''); }); };
+    if(location.hash==='#book' || /[?&]book=1/.test(location.search)) view = 'publicbook';
+    window.addEventListener('hashchange', ()=>{
+      if(location.hash==='#book'){ view='publicbook'; render(); }
+    });
+    async function boot(){
+      if(view==='publicbook'){ try { render(); } catch(err){ document.getElementById('app').textContent = String(err); } return; }
+      try {
+        const ses = await fetch('/api/session', { credentials:'same-origin' });
+        const type = ses.headers.get('content-type') || '';
+        if(ses.ok && type.includes('json')){
+          const data = await ses.json();
+          if(data.ok){ await startShop(); return; }
+          showLogin('');
+          return;
+        }
+        render();
+      } catch(err) {
+        try { render(); } catch(e) {
+          document.getElementById('app').innerHTML = '<div style="padding:24px;font-family:sans-serif;background:#F4F2EC;color:#15361E"><h1>Framework OS hit an error</h1><pre style="white-space:pre-wrap">'+String(e)+'</pre></div>';
+        }
+      }
+    }
+    boot();
+  </script>
+</body>
+</html>
