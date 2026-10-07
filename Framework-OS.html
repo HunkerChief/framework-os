@@ -417,11 +417,18 @@
     let selectedLead = null;
     let selectedInsp = state.inspections[0]?.id || null;
     let selectedJob = null;
-    let selectedDay = '2026-09-11';
+    let selectedDay = new Date().toISOString().slice(0,10);
     let toast = '';
     let portalLead = 'L-1042';
 
+    function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c])); }
     function money(n){ return new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(n||0); }
+    function todayISO(){ return new Date().toISOString().slice(0,10); }
+    function priceFor(job){
+      const svc = SERVICES.find(s=>s.id===job.svc);
+      if(!svc) return null;
+      return svc;
+    }
     function digits(p){ return String(p||'').replace(/\D/g,''); }
     function isCommercial(type){ return /commercial|warehouse|industrial/i.test(type||''); }
     function addDaysISO(iso, n){
@@ -589,7 +596,7 @@
       }).join('');
     }
 
-    window.toggleBay = (id)=>{ openBay = openBay===id?id:id; render(); };
+    window.toggleBay = (id)=>{ openBay = openBay===id ? '' : id; render(); };
     window.go = (v)=>{ view=v; openBay = bayOf(v); if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); render(); };
     window.selectLead = (id)=>{ selectedLead=id; view='lead'; render(); };
     window.selectInsp = (id)=>{ selectedInsp=id; view='inspection'; render(); };
@@ -923,7 +930,7 @@
             const l = state.leads.find(x=>x.id===i.leadId);
             return `<button onclick="selectInsp('${i.id}')" class="text-left bg-white rounded-3xl p-5 border border-forest/10 hover:border-safety">
               <div class="text-xs text-forest/40">${i.id} · ${i.status}</div>
-              <div class="font-display text-2xl">${l?l.org:i.site}</div>
+              <div class="font-display text-2xl">${esc(l?l.org:i.site)}</div>
               <div class="text-sm text-forest/60 mt-1">${i.site}</div>
               <div class="mt-3 flex gap-2 flex-wrap">${i.defects.map(d=>`<span class="text-[11px] bg-offwhite border px-2 py-1 rounded-full">${d.zone} · ${d.severity}</span>`).join('')||'<span class="text-sm">No defects logged yet</span>'}</div>
             </button>`;
@@ -1133,7 +1140,7 @@
     };
 
     function viewReport(){
-      const i = state.inspections[0];
+      const i = state.inspections.find(x=>x.id===selectedInsp) || state.inspections[0];
       const l = i && state.leads.find(x=>x.id===i.leadId);
       if(!i) return shell('<p>Complete a Pest Guard survey first.</p>');
       return `
@@ -1157,7 +1164,7 @@
           <h1 class="font-display text-4xl font-semibold leading-tight">Building envelope deficiency report</h1>
           <p class="mt-3 text-forest/70">Prepared for ${l?l.org:i.site}. This is an architectural finding list. Chemical application is not the primary recommendation.</p>
           <div class="grid grid-cols-2 gap-4 mt-8 text-sm">
-            <div><div class="text-xs uppercase tracking-widest text-forest/40">Site</div>${i.site}</div>
+            <div><div class="text-xs uppercase tracking-widest text-forest/40">Site</div>${esc(i.site)}</div>
             <div><div class="text-xs uppercase tracking-widest text-forest/40">Surveyor</div>${i.tech}</div>
           </div>
           <h2 class="font-display text-2xl mt-10 mb-3">Site stills</h2>
@@ -1179,18 +1186,18 @@
           <ol class="space-y-6">${i.defects.map((d,idx)=>`
             <li class="border-l-2 border-safety pl-4">
               <strong class="font-display">${d.zone} · ${d.severity}</strong>
-              <p class="text-sm mt-1">${d.note}</p>
+              <p class="text-sm mt-1">${esc(d.note)}</p>
               <div class="grid grid-cols-2 gap-3 mt-3">
                 ${photoFrame(i.id,'d'+idx,'Before')}
                 ${photoFrame(i.id,'d'+idx,'After')}
               </div>
             </li>`).join('')}</ol>
           <h2 class="font-display text-2xl mt-10 mb-3">Pathology notes</h2>
-          <p><strong>Moisture.</strong> ${i.moisture||'Not recorded.'}</p>
-          <p class="mt-2"><strong>Thermal.</strong> ${i.thermal||'Not recorded.'}</p>
-          <p class="mt-2"><strong>Attractants.</strong> ${i.attractants||'Not recorded.'}</p>
+          <p><strong>Moisture.</strong> ${esc(i.moisture||'Not recorded.')}</p>
+          <p class="mt-2"><strong>Thermal.</strong> ${esc(i.thermal||'Not recorded.')}</p>
+          <p class="mt-2"><strong>Attractants.</strong> ${esc(i.attractants||'Not recorded.')}</p>
           <h2 class="font-display text-2xl mt-10 mb-3">Recommended work</h2>
-          <p>${i.recommendation||'Seal listed openings with pest-rated materials. Install weep guards. Correct garage and utility closures. Monitor after exclusion — do not lead with rodenticide.'}</p>
+          <p>${esc(i.recommendation||'Seal listed openings with pest-rated materials. Install weep guards. Correct garage and utility closures. Monitor after exclusion — do not lead with rodenticide.')}</p>
           <p class="mt-8 text-xs text-forest/50">Framework Pest Ltd. · frameworkpest.ca · Structural integrity, precision, stewardship. Alberta pesticide service work, where required, is performed by certified applicators following the product label and the provincial Code of Practice. This report does not invent label rates.</p>
         </article>
       </div>`;
@@ -1226,7 +1233,8 @@
       if(st==='Complete'){
         const open = (state.punches||[]).find(p=>p.jobId===id && !p.end);
         if(open) open.end = new Date().toTimeString().slice(0,5);
-        const svc = SERVICES.find(s=>s.id===j.svc) || SERVICES.find(s=>j.type && s.name.toLowerCase().includes(j.type.split(' ')[0].toLowerCase())) || SERVICES[0];
+        const svc = priceFor(j);
+        if(!svc){ showToast('No price-book SKU on this work order. Invoice not guessed.'); save(state); render(); return; }
         const sub = svc.price;
         const gst = Math.round(sub*GST*100)/100;
         state.invoices.unshift({ id:uid('INV'), leadId:j.leadId, jobId:id, date:j.date, due:addDaysISO(j.date,14), subtotal:sub, gst, total:sub+gst, status:'Draft', issued:false, method:'', sku:svc.id, plan:null });
@@ -1261,9 +1269,11 @@
       const date = prompt('Date YYYY-MM-DD', selectedDay)||selectedDay;
       const windowT = prompt('Window','09:00–11:00')||'Anytime';
       const tech = prompt('Tech T1 / T2 / T3','T1')||'T1';
-      const type = prompt('Work type','Exclusion / monitor')||'Service';
+      const sku = prompt('Price-book SKU (SVC-EX, SVC-INSP, SVC-MON)','SVC-EX');
+      const svc = SERVICES.find(s=>s.id===sku);
+      if(!svc) return showToast('Unknown SKU. Nothing booked.');
       const order = state.jobs.filter(j=>j.date===date && j.tech===tech).length+1;
-      state.jobs.push({ id:uid('JOB'), leadId, date, window:windowT, tech, type, status:'Scheduled', community:l.community, address:l.org, zone:l.zone, driveMin:15, order, notes:l.notes||'' });
+      state.jobs.push({ id:uid('JOB'), leadId, date, window:windowT, tech, type:svc.name, svc:svc.id, status:'Scheduled', community:l.community, address:l.org, zone:l.zone, driveMin:15, order, notes:l.notes||'' });
       save(state); view='dispatch'; showToast('Work order booked');
     };
     window.signProposal = (id)=>{
@@ -1293,7 +1303,7 @@
     window.issueInvoice = (id)=>{
       const inv = state.invoices.find(x=>x.id===id); if(!inv) return;
       inv.issued = true;
-      inv.status = (inv.due && inv.due < selectedDay) ? 'Overdue' : 'Due';
+      inv.status = (inv.due && inv.due < todayISO()) ? 'Overdue' : 'Due';
       if(!inv.due) inv.due = addDaysISO(inv.date, 14);
       save(state); showToast(inv.id+' issued · due '+inv.due);
     };
@@ -1328,8 +1338,10 @@
       const l = leadBy(inv.leadId)||{};
       const total = money((inv.subtotal||0) + (inv.gst||0));
       const body = 'Framework Pest: '+inv.id+' for '+(l.org||'the site')+' is '+total+'. E-transfer info@frameworkpest.ca and use '+inv.id+' as the message.';
-      const t = { id:'etransfer', channel: l.phone ? 'SMS' : 'Email', name:'E-transfer request', body };
-      COMM_TEMPLATES.push(t);
+      if(!COMM_TEMPLATES.some(t=>t.id==='etransfer')) COMM_TEMPLATES.push({ id:'etransfer', channel:'SMS', name:'E-transfer request', body:'' });
+      const t = COMM_TEMPLATES.find(x=>x.id==='etransfer');
+      t.channel = l.phone ? 'SMS' : 'Email';
+      t.body = body;
       sendTemplate(inv.leadId, 'etransfer');
     };
     window.logUsage = ()=>{
