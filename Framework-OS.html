@@ -65,7 +65,8 @@
     <div style="min-height:100vh;background:#15361E;color:#F4F2EC;padding:28px;font-family:Outfit,sans-serif">
       <div style="color:#F2733A;letter-spacing:.2em;font-size:11px;text-transform:uppercase">Framework Pest Ltd.</div>
       <h1 style="font-size:32px;margin:8px 0 12px">Framework OS</h1>
-      <p style="color:#A9C0A0;max-width:28rem">Command board is in this file — Framework-OS.html — not the public landing page. If this message stays, JavaScript did not run (preview or file open blocked scripts).</p>
+      <p style="color:#A9C0A0;max-width:28rem">If this stays on screen, scripts did not run. The sections are still linked below.</p>
+      <p style="margin-top:18px"><a style="color:#F4F2EC" href="#dashboard">Command</a> · <a style="color:#F4F2EC" href="#intake">New ticket</a> · <a style="color:#F4F2EC" href="#crm">Pipeline</a> · <a style="color:#F4F2EC" href="#dispatch">Day board</a> · <a style="color:#F4F2EC" href="#billing">Invoices</a> · <a style="color:#F4F2EC" href="#guard">Envelope map</a></p>
     </div>
   </div>
   <script>
@@ -581,15 +582,15 @@
             </span>
             <span class="text-[10px] text-sage/50">${b.items.length}</span>
           </button>
-          <div class="flex flex-wrap gap-1.5 mt-2.5 ${on?'flex':'hidden'}">
-            ${b.items.map(i=>`<button onclick="go('${i.id}')" class="navchip ${view===i.id?'on':''}">${i.label}</button>`).join('')}
+          <div class="flex flex-wrap gap-1.5 mt-2.5">
+            ${b.items.map(i=>`<a href="#${i.id}" onclick="go('${i.id}');return false" class="navchip ${view===i.id?'on':''}">${i.label}</a>`).join('')}
           </div>
         </section>`;
       }).join('');
     }
 
     window.toggleBay = (id)=>{ openBay = openBay===id?id:id; render(); };
-    window.go = (v)=>{ view=v; openBay = bayOf(v); render(); };
+    window.go = (v)=>{ view=v; openBay = bayOf(v); if(location.hash!=='#'+v) history.replaceState(null,'','#'+v); render(); };
     window.selectLead = (id)=>{ selectedLead=id; view='lead'; render(); };
     window.selectInsp = (id)=>{ selectedInsp=id; view='inspection'; render(); };
 
@@ -2582,12 +2583,20 @@
       document.getElementById('app').innerHTML = (map[view]||viewDashboard)();
     }
     window.shopOut = ()=>{ fetch('/api/logout',{method:'POST',credentials:'same-origin'}).then(()=>{ shopSession=null; showLogin(''); }); };
-    if(location.hash==='#book' || /[?&]book=1/.test(location.search)) view = 'publicbook';
+    const hashView = (location.hash||'').replace('#','');
+    if(hashView==='book' || /[?&]book=1/.test(location.search)) view = 'publicbook';
+    else if(hashView && BAYS.some(b=>b.items.some(i=>i.id===hashView))) view = hashView;
+    openBay = bayOf(view);
     window.addEventListener('hashchange', ()=>{
-      if(location.hash==='#book'){ view='publicbook'; render(); }
+      const next = (location.hash||'').replace('#','');
+      if(next==='book'){ view='publicbook'; render(); return; }
+      if(next && BAYS.some(b=>b.items.some(i=>i.id===next))) go(next);
     });
+    try { render(); } catch(err) {
+      document.getElementById('app').innerHTML = '<div style="padding:24px;font-family:sans-serif;background:#F4F2EC;color:#15361E"><h1>Framework OS hit an error</h1><pre style="white-space:pre-wrap">'+String(err)+'</pre></div>';
+    }
     async function boot(){
-      if(view==='publicbook'){ try { render(); } catch(err){ document.getElementById('app').textContent = String(err); } return; }
+      if(view==='publicbook') return;
       try {
         const ses = await fetch('/api/session', { credentials:'same-origin' });
         const type = ses.headers.get('content-type') || '';
